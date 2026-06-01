@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Vokabeln</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f0ede8;
+    --surface: #faf7f2;
+    --card: #fffdf9;
+    --white: #ffffff;
+    --text-primary: #1a1a1a;
+    --text-secondary: #888;
+    --text-muted: #bbb;
+    --border: #e8e4de;
+    --accent: #2a2a2a;
+    --green: #38a169;
+    --green-bg: #f0fff4;
+    --green-border: #b8e8c8;
+    --red: #e05555;
+    --red-bg: #fff0f0;
+    --red-border: #f5c6c6;
+    --neutral: #999;
+    --neutral-bg: #f5f5f5;
+    --neutral-border: #e0e0e0;
+    --progress-day: #2a2a2a;
+    --progress-total: #c8c0b4;
+    --shadow: 0 2px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-card: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; min-height: 100vh; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ── HOME SCREEN ── */
+  #home {
+    padding: 56px 24px 36px;
+    background: var(--bg);
+  }
+
+  .home-header {
+    margin-bottom: 36px;
+  }
+
+  .home-greeting {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+
+  .home-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  /* Daily goal card */
+  .goal-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .goal-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .goal-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .goal-edit-btn {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 8px;
+    background: var(--bg);
+  }
+
+  .goal-progress-wrap {
+    position: relative;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .goal-progress-total {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: var(--progress-total);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+
+  .goal-progress-day {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: var(--progress-day);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+
+  .goal-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .goal-count {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+  }
+
+  .goal-count strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .goal-pct {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* Filter section */
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+  }
+
+  .filter-chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  /* Mode buttons */
+  .modes {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .mode-btn {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    text-align: left;
+  }
+
+  .mode-btn:active { transform: scale(0.98); }
+
+  .mode-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .mode-text { flex: 1; }
+  .mode-name { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+  .mode-desc { font-size: 0.72rem; color: var(--text-muted); }
+  .mode-arrow { color: var(--text-muted); font-size: 0.9rem; }
+
+  /* CSV import */
+  .import-area {
+    background: var(--white);
+    border: 1.5px dashed var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 6px;
+  }
+
+  .import-area:active { background: var(--bg); }
+  .import-icon { font-size: 1.4rem; margin-bottom: 6px; }
+  .import-text { font-size: 0.78rem; color: var(--text-secondary); }
+  .import-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+  #fileInput { display: none; }
+
+  .vocab-count-badge {
+    display: inline-block;
+    background: var(--bg);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+  }
+
+  /* ── GOAL MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 100;
+    align-items: flex-end;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal-sheet {
+    background: var(--white);
+    border-radius: 28px 28px 0 0;
+    padding: 28px 24px 48px;
+    width: 100%;
+  }
+
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 24px;
+  }
+
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
+
+  .goal-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .goal-stepper {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .goal-number {
+    flex: 1;
+    text-align: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: var(--text-primary);
+  }
+
+  .modal-save {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* ── SETTINGS ── */
+  .settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 18px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    margin-top: 6px;
+    width: 100%;
+    transition: all 0.15s;
+  }
+
+  .settings-toggle:active { background: var(--bg); }
+  .settings-toggle-left { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 500; color: var(--text-primary); }
+  .settings-toggle-arrow { color: var(--text-muted); font-size: 0.8rem; transition: transform 0.2s; }
+  .settings-toggle-arrow.open { transform: rotate(90deg); }
+
+  .settings-panel {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .settings-panel.open { display: block; }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .settings-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .settings-row:first-child { padding-top: 0; }
+
+  .settings-label { font-size: 0.8rem; color: var(--text-primary); font-weight: 500; }
+  .settings-sublabel { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+
+  .settings-select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 10px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .settings-reset {
+    width: 100%;
+    padding: 11px;
+    background: var(--red-bg);
+    color: var(--red);
+    border: 1.5px solid var(--red-border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 14px;
+  }
+
+  /* ── STUDY SCREEN ── */
+  #study {
+    background: var(--bg);
+    padding: 0;
+  }
+
+  .study-header {
+    padding: 52px 24px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: var(--white);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+  }
+
+  .study-title {
+    flex: 1;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
+  }
+
+  .study-session-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Combined progress bar */
+  .progress-wrap {
+    padding: 0 24px 20px;
+  }
+
+  .progress-track {
+    position: relative;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: visible;
+  }
+
+  .progress-total-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: var(--progress-total);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  .progress-day-fill {
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%;
+    background: var(--progress-day);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+  }
+
+  .progress-label-day {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+
+  .progress-label-day span { color: var(--text-secondary); font-weight: 500; }
+
+  .progress-label-pct {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* Card area */
+  .card-area {
+    flex: 1;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-perspective {
+    width: 100%;
+    perspective: 1000px;
+    margin-bottom: 20px;
+  }
+
+  .card-inner {
+    position: relative;
+    width: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .card-inner.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    width: 100%;
+    background: var(--card);
+    border-radius: 24px;
+    padding: 48px 28px 36px;
+    text-align: center;
+    box-shadow: var(--shadow-card);
+    border: 1px solid rgba(0,0,0,0.04);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .card-face.back {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotateY(180deg);
+  }
+
+  .card-lang {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+
+  .card-word {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.6rem;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    margin-bottom: 10px;
+  }
+
+  .card-pronunciation {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-style: italic;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    margin-bottom: 12px;
+    min-height: 20px;
+  }
+
+  .card-category {
+    display: inline-block;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    background: var(--bg);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .card-strength {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 3px;
+  }
+
+  .strength-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .strength-dot.filled { background: var(--accent); }
+
+  .card-tap-hint {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 24px;
+    letter-spacing: 0.3px;
+    height: 16px;
+    transition: opacity 0.3s;
+  }
+
+  /* Buttons */
+  .action-buttons {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 0 24px 48px;
+  }
+
+  .action-btn {
+    padding: 16px 0 14px;
+    border-radius: 18px;
+    border: 1.5px solid transparent;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: transform 0.1s, opacity 0.1s;
+  }
+
+  .action-btn:active { transform: scale(0.95); }
+
+  .btn-icon { font-size: 1.2rem; line-height: 1; }
+  .btn-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.3px; }
+
+  .btn-wrong  { background: var(--red-bg);     border-color: var(--red-border);     color: var(--red); }
+  .btn-skip   { background: var(--neutral-bg); border-color: var(--neutral-border); color: var(--neutral); }
+  .btn-right  { background: var(--green-bg);   border-color: var(--green-border);   color: var(--green); }
+
+  /* Disabled state before flip */
+  .action-btn.locked { opacity: 0.35; pointer-events: none; }
+
+  /* ── DONE SCREEN ── */
+  #done {
+    background: var(--bg);
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .done-emoji { font-size: 3rem; margin-bottom: 16px; }
+
+  .done-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+  }
+
+  .done-sub {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+
+  .done-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 32px;
+  }
+
+  .done-stat {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 16px 8px;
+    box-shadow: var(--shadow);
+  }
+
+  .done-stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .done-stat-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .done-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px;
+  }
+
+  .done-btn-secondary {
+    width: 100%;
+    padding: 16px;
+    background: var(--white);
+    color: var(--text-secondary);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .screen.active .card-perspective { animation: fadeUp 0.35s ease both; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ HOME SCREEN ══════════════ -->
+<div id="home" class="screen active">
+
+  <div class="home-header">
+    <div class="home-greeting">Guten Tag</div>
+    <div class="home-title" id="homeTitle">Vokabeln</div>
+  </div>
+
+  <!-- Daily goal -->
+  <div class="goal-card">
+    <div class="goal-card-top">
+      <span class="goal-label">Tagesziel</span>
+      <button class="goal-edit-btn" onclick="openGoalModal()">Bearbeiten</button>
+    </div>
+    <div class="goal-progress-wrap">
+      <div class="goal-progress-total" id="homeProgressTotal" style="width:0%"></div>
+      <div class="goal-progress-day"   id="homeProgressDay"   style="width:0%"></div>
+    </div>
+    <div class="goal-stats">
+      <div class="goal-count"><strong id="homeDayCount">0</strong> / <span id="homeGoalNum">10</span> heute · <span id="homeTotalCount">0</span> gesamt</div>
+      <div class="goal-pct" id="homeDayPct">0%</div>
+    </div>
+  </div>
+
+  <!-- Language filter -->
+  <div id="langFilterSection" style="display:none">
+    <div class="section-label">Sprache</div>
+    <div class="filter-row" id="langFilterRow"></div>
+  </div>
+
+  <!-- Category filter -->
+  <div id="catFilterSection" style="display:none">
+    <div class="section-label">Kategorie</div>
+    <div class="filter-row" id="catFilterRow"></div>
+  </div>
+
+  <!-- Modes -->
+  <div class="section-label" style="margin-top:20px">Lernen</div>
+  <div class="modes">
+    <button class="mode-btn" onclick="startStudy('de-to-foreign')">
+      <div class="mode-icon">🇩🇪</div>
+      <div class="mode-text">
+        <div class="mode-name">Deutsch → Fremdsprache</div>
+        <div class="mode-desc">Du siehst das deutsche Wort</div>
+      </div>
+      <div class="mode-arrow">›</div>
+    </button>
+    <button class="mode-btn" onclick="startStudy('foreign-to-de')">
+      <div class="mode-icon">🌐</div>
+      <div class="mode-text">
+        <div class="mode-name">Fremdsprache → Deutsch</div>
+        <div class="mode-desc">Du siehst das fremde Wort</div>
+      </div>
+      <div class="mode-arrow">›</div>
+    </button>
+    <button class="mode-btn" onclick="startStudy('mixed')">
+      <div class="mode-icon">🔀</div>
+      <div class="mode-text">
+        <div class="mode-name">Gemischt</div>
+        <div class="mode-desc">Beide Richtungen zufällig</div>
+      </div>
+      <div class="mode-arrow">›</div>
+    </button>
+  </div>
+
+  <!-- Settings -->
+  <div class="section-label">Einstellungen</div>
+  <button class="settings-toggle" onclick="toggleSettings()">
+    <div class="settings-toggle-left">⚙️ Einstellungen anpassen</div>
+    <div class="settings-toggle-arrow" id="settingsArrow">›</div>
+  </button>
+  <div class="settings-panel" id="settingsPanel">
+
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Standard-Modus</div>
+        <div class="settings-sublabel">Beim Start vorausgewählt</div>
+      </div>
+      <select class="settings-select" id="settingDefaultMode" onchange="saveSetting('defaultMode', this.value)">
+        <option value="mixed">Gemischt</option>
+        <option value="de-to-foreign">DE → Sprache</option>
+        <option value="foreign-to-de">Sprache → DE</option>
+      </select>
+    </div>
+
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Karten pro Session</div>
+        <div class="settings-sublabel">Max. Anzahl Karten</div>
+      </div>
+      <select class="settings-select" id="settingSessionSize" onchange="saveSetting('sessionSize', this.value)">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+        <option value="999">Alle</option>
+      </select>
+    </div>
+
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Lautschrift anzeigen</div>
+        <div class="settings-sublabel">Auf der Vorderseite der Karte</div>
+      </div>
+      <select class="settings-select" id="settingShowPron" onchange="saveSetting('showPron', this.value)">
+        <option value="back">Nur Rückseite</option>
+        <option value="both">Vorder- & Rückseite</option>
+        <option value="none">Nie</option>
+      </select>
+    </div>
+
+    <div class="settings-row">
+      <div>
+        <div class="settings-label">Sprache</div>
+        <div class="settings-sublabel">Aktive Lernsprache</div>
+      </div>
+      <select class="settings-select" id="settingLang" onchange="saveSetting('activeLang', this.value)">
+        <option value="all">Alle</option>
+      </select>
+    </div>
+
+    <button class="settings-reset" onclick="resetProgress()">🗑 Lernfortschritt zurücksetzen</button>
+  </div>
+
+  <!-- CSV Status -->
+
+  <div class="section-label">Vokabeln</div>
+  <div class="goal-card" style="margin-bottom:0">
+    <div id="csvStatus" style="display:flex;align-items:center;gap:12px">
+      <div style="font-size:1.4rem">⏳</div>
+      <div>
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary)">Lade Vokabeln…</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">vokabeln.csv wird geladen</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fallback manual import -->
+  <div class="import-area" onclick="document.getElementById('fileInput').click()" style="margin-top:10px">
+    <div class="import-icon">📂</div>
+    <div class="import-text" style="font-size:0.75rem">Oder CSV manuell laden</div>
+    <div class="import-sub">Falls automatisches Laden fehlschlägt</div>
+  </div>
+  <input type="file" id="fileInput" accept=".csv,.txt" onchange="loadCSV(event)">
+
+</div>
+
+<!-- ══════════════ STUDY SCREEN ══════════════ -->
+<div id="study" class="screen">
+
+  <div class="study-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="study-title" id="studyTitle">Kroatisch → Deutsch</div>
+    <div class="study-session-count" id="sessionCount">1 / 20</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-total-fill" id="studyProgressTotal" style="width:0%"></div>
+      <div class="progress-day-fill"   id="studyProgressDay"   style="width:0%"></div>
+    </div>
+    <div class="progress-labels">
+      <div class="progress-label-day">Heute <span id="studyDayLabel">0</span> · Gesamt <span id="studyTotalLabel">0</span></div>
+      <div class="progress-label-pct" id="studyPct">0%</div>
+    </div>
+  </div>
+
+  <div class="card-area">
+    <div class="card-perspective">
+      <div class="card-inner" id="cardInner" onclick="flipCard()">
+        <!-- FRONT -->
+        <div class="card-face front" id="cardFront">
+          <div class="card-strength" id="cardStrength"></div>
+          <div class="card-lang" id="frontLang">DEUTSCH</div>
+          <div class="card-word" id="frontWord">—</div>
+          <div class="card-pronunciation" id="frontPron"></div>
+          <div class="card-category" id="frontCat"></div>
+        </div>
+        <!-- BACK -->
+        <div class="card-face back" id="cardBack">
+          <div class="card-lang" id="backLang">KROATISCH</div>
+          <div class="card-word" id="backWord">—</div>
+          <div class="card-pronunciation" id="backPron"></div>
+          <div class="card-category" id="backCat"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-tap-hint" id="tapHint">Karte antippen zum Umdrehen</div>
+  </div>
+
+  <div class="action-buttons">
+    <button class="action-btn btn-wrong locked" id="btnWrong"  onclick="answer('wrong')">
+      <span class="btn-icon">✕</span>
+      <span class="btn-label">Falsch</span>
+    </button>
+    <button class="action-btn btn-skip  locked" id="btnSkip"   onclick="answer('skip')">
+      <span class="btn-icon">→</span>
+      <span class="btn-label">Überspr.</span>
+    </button>
+    <button class="action-btn btn-right locked" id="btnRight"  onclick="answer('right')">
+      <span class="btn-icon">✓</span>
+      <span class="btn-label">Richtig</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- ══════════════ DONE SCREEN ══════════════ -->
+<div id="done" class="screen">
+  <div class="done-emoji" id="doneEmoji">🎉</div>
+  <div class="done-title" id="doneTitle">Session beendet</div>
+  <div class="done-sub"   id="doneSub">Gut gemacht!</div>
+  <div class="done-stats">
+    <div class="done-stat">
+      <div class="done-stat-num" id="doneRight">0</div>
+      <div class="done-stat-label">Richtig</div>
+    </div>
+    <div class="done-stat">
+      <div class="done-stat-num" id="doneSkip">0</div>
+      <div class="done-stat-label">Überspr.</div>
+    </div>
+    <div class="done-stat">
+      <div class="done-stat-num" id="doneWrong">0</div>
+      <div class="done-stat-label">Falsch</div>
+    </div>
+  </div>
+  <button class="done-btn"           onclick="startStudy(currentMode)">Nochmal lernen</button>
+  <button class="done-btn-secondary" onclick="goHome()">Zur Startseite</button>
+</div>
+
+<!-- ══════════════ GOAL MODAL ══════════════ -->
+<div class="modal-overlay" id="goalModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Tagesziel</div>
+    <div class="goal-input-wrap">
+      <button class="goal-stepper" onclick="adjustGoal(-5)">−</button>
+      <div class="goal-number" id="goalModalNum">10</div>
+      <button class="goal-stepper" onclick="adjustGoal(+5)">+</button>
+    </div>
+    <button class="modal-save" onclick="saveGoal()">Speichern</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let vocab = [];          // [{kategorie, deutsch, langs:[{name,word,pron}]}]
+let progress = {};       // key: "deutsch|langName" → {strength, streak, lastSeen}
+let todayStats = {};     // key: date string → count reviewed
+let dailyGoal = 10;
+let tempGoal = 10;
+
+let selectedLangs = [];
+let selectedCats  = [];
+let currentMode   = 'mixed';
+let sessionQueue  = [];
+let sessionIndex  = 0;
+let sessionRight  = 0;
+let sessionWrong  = 0;
+let sessionSkip   = 0;
+let currentCard   = null; // {front:{lang,word,pron}, back:{lang,word,pron}, cat, key}
+let isFlipped     = false;
+
+const STORAGE_KEY = 'vokabel_progress_v1';
+
+// ── PERSISTENCE ────────────────────────────────────────
+function saveState() {
+  const data = { progress, todayStats, dailyGoal };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    progress   = data.progress   || {};
+    todayStats = data.todayStats || {};
+    dailyGoal  = data.dailyGoal  || 10;
+  } catch(e) {}
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function getTodayCount() {
+  return todayStats[todayKey()] || 0;
+}
+
+function incrementToday() {
+  const k = todayKey();
+  todayStats[k] = (todayStats[k] || 0) + 1;
+  saveState();
+}
+
+// ── CSV LOADING ────────────────────────────────────────
+function loadCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    parseCSV(e.target.result);
+    event.target.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return;
+
+  // Detect header
+  const headerLine = lines[0];
+  const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
+
+  // Expect: kategorie, deutsch, lang1, lang1-lautschrift, lang2, lang2-lautschrift, ...
+  // First col = kategorie, second = deutsch, then pairs
+  const langNames = [];
+  for (let i = 2; i < headers.length; i += 2) {
+    const name = headers[i];
+    if (name) langNames.push(name);
+  }
+
+  vocab = [];
+  for (let r = 1; r < lines.length; r++) {
+    const cols = splitCSVLine(lines[r]);
+    if (cols.length < 3) continue;
+    const kategorie = cols[0]?.trim() || '';
+    const deutsch   = cols[1]?.trim() || '';
+    if (!deutsch) continue;
+    const langs = [];
+    for (let i = 0; i < langNames.length; i++) {
+      const colIdx = 2 + i * 2;
+      const word   = cols[colIdx]?.trim()   || '';
+      const pron   = cols[colIdx+1]?.trim() || '';
+      if (word) langs.push({ name: langNames[i], word, pron });
+    }
+    if (langs.length) vocab.push({ kategorie, deutsch, langs });
+  }
+
+  buildFilters();
+  updateLangDropdown();
+  updateHomeStats();
+
+  const badge = document.getElementById('vocabBadge');
+  badge.textContent = vocab.length + ' Vokabeln geladen';
+  badge.style.display = 'inline-block';
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (const ch of line) {
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { result.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
+// ── FILTERS ────────────────────────────────────────────
+function buildFilters() {
+  const langs = [...new Set(vocab.flatMap(v => v.langs.map(l => l.name)))];
+  const cats  = [...new Set(vocab.map(v => v.kategorie).filter(Boolean))];
+
+  selectedLangs = [...langs];
+  selectedCats  = cats.length ? [...cats] : [];
+
+  // Language filter
+  const langSection = document.getElementById('langFilterSection');
+  const langRow     = document.getElementById('langFilterRow');
+  langRow.innerHTML = '';
+  if (langs.length > 1) {
+    langSection.style.display = 'block';
+    langs.forEach(l => {
+      const chip = document.createElement('button');
+      chip.className = 'filter-chip active';
+      chip.textContent = capitalize(l);
+      chip.dataset.lang = l;
+      chip.onclick = () => toggleFilter(chip, selectedLangs, l);
+      langRow.appendChild(chip);
+    });
+  } else {
+    langSection.style.display = 'none';
+  }
+
+  // Category filter
+  const catSection = document.getElementById('catFilterSection');
+  const catRow     = document.getElementById('catFilterRow');
+  catRow.innerHTML = '';
+  if (cats.length > 0) {
+    catSection.style.display = 'block';
+    const allChip = document.createElement('button');
+    allChip.className = 'filter-chip active';
+    allChip.textContent = 'Alle';
+    allChip.dataset.cat = '__all__';
+    allChip.onclick = () => {
+      selectedCats = [...cats];
+      catRow.querySelectorAll('.filter-chip').forEach(c => c.classList.add('active'));
+    };
+    catRow.appendChild(allChip);
+    cats.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'filter-chip active';
+      chip.textContent = c;
+      chip.dataset.cat = c;
+      chip.onclick = () => toggleFilter(chip, selectedCats, c);
+      catRow.appendChild(chip);
+    });
+  } else {
+    catSection.style.display = 'none';
+  }
+
+  // Title
+  const title = langs.length ? capitalize(langs[0]) : 'Vokabeln';
+  document.getElementById('homeTitle').textContent = title + ' lernen';
+}
+
+function toggleFilter(chip, arr, val) {
+  const idx = arr.indexOf(val);
+  if (idx === -1) { arr.push(val); chip.classList.add('active'); }
+  else            { arr.splice(idx,1); chip.classList.remove('active'); }
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// ── SPACED REPETITION ──────────────────────────────────
+function getStrength(key) { return progress[key]?.strength ?? 0; }
+function getStreak(key)   { return progress[key]?.streak   ?? 0; }
+
+function updateStrength(key, result) {
+  if (!progress[key]) progress[key] = { strength: 0, streak: 0 };
+  const p = progress[key];
+  if (result === 'right') {
+    p.streak = (p.streak || 0) + 1;
+    if (p.strength < 5) p.strength++;
+  } else if (result === 'wrong') {
+    // Only fall back to 0 if streak < 3
+    if ((p.streak || 0) < 3) p.strength = 0;
+    else p.strength = Math.max(0, p.strength - 1);
+    p.streak = 0;
+  }
+  // skip: no change
+  saveState();
+}
+
+function cardWeight(key) {
+  const s = getStrength(key);
+  // Higher weight = more likely to appear
+  return [10, 7, 4, 2, 1, 0.3][s] || 0.3;
+}
+
+function buildQueue() {
+  // Filter vocab
+  const activeLang = settings.activeLang || 'all';
+  const filtered = vocab.filter(v => {
+    const catOk = selectedCats.length === 0 || selectedCats.includes(v.kategorie) || !v.kategorie;
+    return catOk;
+  });
+
+  // Build pairs
+  const pairs = [];
+  filtered.forEach(v => {
+    v.langs.forEach(l => {
+      if (activeLang !== 'all' && l.name !== activeLang) return;
+      if (!selectedLangs.includes(l.name)) return;
+      const key = v.deutsch + '|' + l.name;
+      pairs.push({ v, l, key });
+    });
+  });
+
+  if (!pairs.length) return [];
+
+  // Weighted shuffle
+  const weighted = pairs.map(p => ({ p, w: cardWeight(p.key) + Math.random() * 0.5 }));
+  weighted.sort((a,b) => b.w - a.w);
+
+  const size = parseInt(settings.sessionSize) || 20;
+  return weighted.slice(0, Math.min(size, weighted.length)).map(x => x.p);
+}
+
+// ── STUDY ──────────────────────────────────────────────
+function startStudy(mode) {
+  if (!vocab.length) {
+    alert('Bitte zuerst eine CSV-Datei laden.');
+    return;
+  }
+  currentMode  = mode;
+  sessionQueue = buildQueue();
+  if (!sessionQueue.length) { alert('Keine Vokabeln für diese Auswahl.'); return; }
+  sessionIndex = 0;
+  sessionRight = 0;
+  sessionWrong = 0;
+  sessionSkip  = 0;
+  showScreen('study');
+  showCard();
+}
+
+function showCard() {
+  if (sessionIndex >= sessionQueue.length) {
+    showDone();
+    return;
+  }
+
+  const { v, l, key } = sessionQueue[sessionIndex];
+  isFlipped = false;
+
+  // Determine direction
+  let dir = currentMode;
+  if (dir === 'mixed') dir = Math.random() < 0.5 ? 'de-to-foreign' : 'foreign-to-de';
+
+  let front, back;
+  if (dir === 'de-to-foreign') {
+    front = { lang: 'Deutsch', word: v.deutsch, pron: '' };
+    back  = { lang: capitalize(l.name), word: l.word, pron: l.pron };
+  } else {
+    front = { lang: capitalize(l.name), word: l.word, pron: l.pron };
+    back  = { lang: 'Deutsch', word: v.deutsch, pron: '' };
+  }
+
+  currentCard = { front, back, cat: v.kategorie, key };
+
+  // Reset flip
+  const inner = document.getElementById('cardInner');
+  inner.classList.remove('flipped');
+
+  // Fill front
+  document.getElementById('frontLang').textContent = front.lang.toUpperCase();
+  document.getElementById('frontWord').textContent = front.word;
+  document.getElementById('frontPron').textContent = front.pron || '';
+  document.getElementById('frontCat').textContent  = v.kategorie || '';
+
+  // Fill back
+  document.getElementById('backLang').textContent = back.lang.toUpperCase();
+  document.getElementById('backWord').textContent = back.word;
+  document.getElementById('backPron').textContent = back.pron || '';
+  document.getElementById('backCat').textContent  = v.kategorie || '';
+
+  // Lautschrift je nach Einstellung
+  const showPron = settings.showPron || 'back';
+  document.getElementById('frontPron').style.display =
+    (showPron === 'both') ? '' : (showPron === 'none' ? 'none' : (dir === 'foreign-to-de' ? '' : 'none'));
+  document.getElementById('backPron').style.display = showPron === 'none' ? 'none' : '';
+
+  // Strength dots
+  const strength = getStrength(key);
+  const dotsEl = document.getElementById('cardStrength');
+  dotsEl.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const d = document.createElement('div');
+    d.className = 'strength-dot' + (i < strength ? ' filled' : '');
+    dotsEl.appendChild(d);
+  }
+
+  // Lock buttons
+  lockButtons(true);
+  document.getElementById('tapHint').style.opacity = '1';
+
+  // Mode label
+  const modeLabel = currentMode === 'de-to-foreign' ? 'Deutsch → Fremdsprache'
+                  : currentMode === 'foreign-to-de'  ? 'Fremdsprache → Deutsch'
+                  : 'Gemischt';
+  document.getElementById('studyTitle').textContent = modeLabel;
+
+  // Session counter
+  document.getElementById('sessionCount').textContent =
+    (sessionIndex + 1) + ' / ' + sessionQueue.length;
+
+  updateStudyProgress();
+}
+
+function flipCard() {
+  if (isFlipped) return;
+  isFlipped = true;
+  document.getElementById('cardInner').classList.add('flipped');
+  lockButtons(false);
+  document.getElementById('tapHint').style.opacity = '0';
+}
+
+function lockButtons(lock) {
+  ['btnWrong','btnSkip','btnRight'].forEach(id => {
+    document.getElementById(id).classList.toggle('locked', lock);
+  });
+}
+
+function answer(result) {
+  if (!isFlipped) return;
+  updateStrength(currentCard.key, result);
+  if (result === 'right') { sessionRight++; incrementToday(); }
+  else if (result === 'wrong') { sessionWrong++; incrementToday(); }
+  // skip: don't count toward today goal
+  sessionIndex++;
+  updateHomeStats();
+  showCard();
+}
+
+// ── PROGRESS ───────────────────────────────────────────
+function getTotalLearned() {
+  return Object.values(progress).filter(p => p.strength > 0).length;
+}
+
+function updateHomeStats() {
+  const dayCount   = getTodayCount();
+  const totalCount = getTotalLearned();
+  const totalVocab = vocab.flatMap(v => v.langs).length || 1;
+
+  const dayPct   = Math.min(100, Math.round(dayCount / dailyGoal * 100));
+  const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
+
+  document.getElementById('homeDayCount').textContent   = dayCount;
+  document.getElementById('homeGoalNum').textContent    = dailyGoal;
+  document.getElementById('homeTotalCount').textContent = totalCount;
+  document.getElementById('homeDayPct').textContent     = dayPct + '%';
+  document.getElementById('homeProgressTotal').style.width = totalPct + '%';
+  document.getElementById('homeProgressDay').style.width   = dayPct + '%';
+}
+
+function updateStudyProgress() {
+  const dayCount   = getTodayCount();
+  const totalCount = getTotalLearned();
+  const totalVocab = vocab.flatMap(v => v.langs).length || 1;
+
+  const dayPct   = Math.min(100, Math.round(dayCount / dailyGoal * 100));
+  const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
+
+  document.getElementById('studyProgressTotal').style.width = totalPct + '%';
+  document.getElementById('studyProgressDay').style.width   = dayPct  + '%';
+  document.getElementById('studyDayLabel').textContent      = dayCount + '/' + dailyGoal;
+  document.getElementById('studyTotalLabel').textContent    = totalCount;
+  document.getElementById('studyPct').textContent           = dayPct + '%';
+}
+
+// ── DONE ───────────────────────────────────────────────
+function showDone() {
+  document.getElementById('doneRight').textContent = sessionRight;
+  document.getElementById('doneSkip').textContent  = sessionSkip;
+  document.getElementById('doneWrong').textContent = sessionWrong;
+
+  const pct = sessionQueue.length ? Math.round(sessionRight / sessionQueue.length * 100) : 0;
+  let emoji = '😅', title = 'Weiter üben!', sub = 'Das klappt bald besser.';
+  if (pct >= 90) { emoji = '🎉'; title = 'Ausgezeichnet!'; sub = 'Du hast ' + pct + '% richtig. Weiter so!'; }
+  else if (pct >= 70) { emoji = '👍'; title = 'Gut gemacht!'; sub = pct + '% richtig – auf dem richtigen Weg.'; }
+  else if (pct >= 50) { emoji = '📚'; title = 'Solide!'; sub = 'Noch etwas üben und du hast es.'; }
+
+  document.getElementById('doneEmoji').textContent = emoji;
+  document.getElementById('doneTitle').textContent = title;
+  document.getElementById('doneSub').textContent   = sub;
+
+  showScreen('done');
+}
+
+// ── GOAL MODAL ─────────────────────────────────────────
+function openGoalModal() {
+  tempGoal = dailyGoal;
+  document.getElementById('goalModalNum').textContent = tempGoal;
+  document.getElementById('goalModal').classList.add('open');
+}
+
+function adjustGoal(delta) {
+  tempGoal = Math.max(1, tempGoal + delta);
+  document.getElementById('goalModalNum').textContent = tempGoal;
+}
+
+function saveGoal() {
+  dailyGoal = tempGoal;
+  saveState();
+  updateHomeStats();
+  document.getElementById('goalModal').classList.remove('open');
+}
+
+document.getElementById('goalModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('goalModal'))
+    document.getElementById('goalModal').classList.remove('open');
+});
+
+// ── NAVIGATION ─────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  showScreen('home');
+  updateHomeStats();
+}
+
+// ── SETTINGS ───────────────────────────────────────────
+let settings = { defaultMode: 'mixed', sessionSize: 20, showPron: 'back', activeLang: 'all' };
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem('vokabel_settings_v1');
+    if (raw) settings = { ...settings, ...JSON.parse(raw) };
+  } catch(e) {}
+  applySettings();
+}
+
+function saveSetting(key, value) {
+  settings[key] = value;
+  try { localStorage.setItem('vokabel_settings_v1', JSON.stringify(settings)); } catch(e) {}
+}
+
+function applySettings() {
+  const dm = document.getElementById('settingDefaultMode');
+  const ss = document.getElementById('settingSessionSize');
+  const sp = document.getElementById('settingShowPron');
+  if (dm) dm.value = settings.defaultMode;
+  if (ss) ss.value = settings.sessionSize;
+  if (sp) sp.value = settings.showPron;
+}
+
+function toggleSettings() {
+  const panel = document.getElementById('settingsPanel');
+  const arrow = document.getElementById('settingsArrow');
+  panel.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function resetProgress() {
+  if (!confirm('Lernfortschritt wirklich zurücksetzen?')) return;
+  progress = {};
+  todayStats = {};
+  saveState();
+  updateHomeStats();
+}
+
+function updateLangDropdown() {
+  const sel = document.getElementById('settingLang');
+  if (!sel) return;
+  const langs = [...new Set(vocab.flatMap(v => v.langs.map(l => l.name)))];
+  sel.innerHTML = '<option value="all">Alle</option>';
+  langs.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l;
+    opt.textContent = capitalize(l);
+    if (settings.activeLang === l) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+// ── AUTO-LOAD CSV FROM GITHUB ──────────────────────────
+async function autoLoadCSV() {
+  const statusEl = document.getElementById('csvStatus');
+  try {
+    const res = await fetch('vokabeln.csv');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    parseCSV(text);
+    statusEl.innerHTML = `
+      <div style="font-size:1.4rem">✅</div>
+      <div>
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary)">${vocab.length} Vokabeln geladen</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">vokabeln.csv · automatisch geladen</div>
+      </div>`;
+  } catch(e) {
+    statusEl.innerHTML = `
+      <div style="font-size:1.4rem">⚠️</div>
+      <div>
+        <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary)">Keine Vokabeln gefunden</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">vokabeln.csv nicht gefunden – bitte manuell laden</div>
+      </div>`;
+  }
+}
+
+// ── INIT ───────────────────────────────────────────────
+loadState();
+loadSettings();
+document.getElementById('homeGoalNum').textContent = dailyGoal;
+updateHomeStats();
+autoLoadCSV();
+</script>
+</body>
+</html>

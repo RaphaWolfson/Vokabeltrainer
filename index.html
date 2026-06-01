@@ -839,26 +839,7 @@
     <button class="settings-reset" onclick="resetProgress()">🗑 Lernfortschritt zurücksetzen</button>
   </div>
 
-  <!-- CSV Status -->
-
-  <div class="section-label">Vokabeln</div>
-  <div class="goal-card" style="margin-bottom:0">
-    <div id="csvStatus" style="display:flex;align-items:center;gap:12px">
-      <div style="font-size:1.4rem">⏳</div>
-      <div>
-        <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary)">Lade Vokabeln…</div>
-        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">vokabeln.csv wird geladen</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Fallback manual import -->
-  <div class="import-area" onclick="document.getElementById('fileInput').click()" style="margin-top:10px">
-    <div class="import-icon">📂</div>
-    <div class="import-text" style="font-size:0.75rem">Oder CSV manuell laden</div>
-    <div class="import-sub">Falls automatisches Laden fehlschlägt</div>
-  </div>
-  <input type="file" id="fileInput" accept=".csv,.txt" onchange="loadCSV(event)">
+  <input type="file" id="fileInput" accept=".csv,.txt" onchange="loadCSV(event)" style="display:none">
 
 </div>
 
@@ -1293,11 +1274,15 @@ function showCard() {
 }
 
 function flipCard() {
-  if (isFlipped) return;
-  isFlipped = true;
-  document.getElementById('cardInner').classList.add('flipped');
-  lockButtons(false);
-  document.getElementById('tapHint').style.opacity = '0';
+  const inner = document.getElementById('cardInner');
+  if (!isFlipped) {
+    isFlipped = true;
+    inner.classList.add('flipped');
+    lockButtons(false);
+    document.getElementById('tapHint').style.opacity = '0';
+  } else {
+    inner.classList.toggle('flipped');
+  }
 }
 
 function lockButtons(lock) {
@@ -1449,27 +1434,15 @@ function updateLangDropdown() {
   // Language selection is now handled by the filter chips on the home screen
 }
 
-// ── AUTO-LOAD CSV FROM GITHUB ──────────────────────────
+// ── AUTO-LOAD CSV ──────────────────────────────────────
 async function autoLoadCSV() {
-  const statusEl = document.getElementById('csvStatus');
   try {
     const res = await fetch('vokabeln.csv');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
     parseCSV(text);
-    statusEl.innerHTML = `
-      <div style="font-size:1.4rem">✅</div>
-      <div>
-        <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary)">${vocab.length} Vokabeln geladen</div>
-        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">vokabeln.csv · automatisch geladen</div>
-      </div>`;
   } catch(e) {
-    statusEl.innerHTML = `
-      <div style="font-size:1.4rem">⚠️</div>
-      <div>
-        <div style="font-size:0.82rem;font-weight:600;color:var(--text-primary)">Keine Vokabeln gefunden</div>
-        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px">vokabeln.csv nicht gefunden – bitte manuell laden</div>
-      </div>`;
+    // silent — user can load manually via file input
   }
 }
 

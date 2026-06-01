@@ -764,7 +764,7 @@
   <!-- Language filter -->
   <div id="langFilterSection" style="display:none">
     <div class="section-label">Sprache</div>
-    <div class="filter-row" id="langFilterRow"></div>
+    <div class="filter-row" id="langFilterRow" style="flex-wrap:nowrap"></div>
   </div>
 
   <!-- Category filter -->
@@ -833,28 +833,6 @@
         <option value="30">30</option>
         <option value="50">50</option>
         <option value="999">Alle</option>
-      </select>
-    </div>
-
-    <div class="settings-row">
-      <div>
-        <div class="settings-label">Lautschrift anzeigen</div>
-        <div class="settings-sublabel">Auf der Vorderseite der Karte</div>
-      </div>
-      <select class="settings-select" id="settingShowPron" onchange="saveSetting('showPron', this.value)">
-        <option value="back">Nur Rückseite</option>
-        <option value="both">Vorder- & Rückseite</option>
-        <option value="none">Nie</option>
-      </select>
-    </div>
-
-    <div class="settings-row">
-      <div>
-        <div class="settings-label">Sprache</div>
-        <div class="settings-sublabel">Aktive Lernsprache</div>
-      </div>
-      <select class="settings-select" id="settingLang" onchange="saveSetting('activeLang', this.value)">
-        <option value="all">Alle</option>
       </select>
     </div>
 
@@ -1104,21 +1082,21 @@ function buildFilters() {
   const langs = [...new Set(vocab.flatMap(v => v.langs.map(l => l.name)))];
   const cats  = [...new Set(vocab.map(v => v.kategorie).filter(Boolean))];
 
-  selectedLangs = [...langs];
+  selectedLangs = langs.length ? [langs[0]] : [];
   selectedCats  = cats.length ? [...cats] : [];
 
-  // Language filter
+  // Language filter — single selection (radio style)
   const langSection = document.getElementById('langFilterSection');
   const langRow     = document.getElementById('langFilterRow');
   langRow.innerHTML = '';
   if (langs.length > 1) {
     langSection.style.display = 'block';
-    langs.forEach(l => {
+    langs.forEach((l, idx) => {
       const chip = document.createElement('button');
-      chip.className = 'filter-chip active';
+      chip.className = 'filter-chip' + (idx === 0 ? ' active' : '');
       chip.textContent = capitalize(l);
       chip.dataset.lang = l;
-      chip.onclick = () => toggleFilter(chip, selectedLangs, l);
+      chip.onclick = () => selectLang(l);
       langRow.appendChild(chip);
     });
   } else {
@@ -1153,8 +1131,17 @@ function buildFilters() {
   }
 
   // Title
-  const title = langs.length ? capitalize(langs[0]) : 'Vokabeln';
+  const title = selectedLangs.length ? capitalize(selectedLangs[0]) : 'Vokabeln';
   document.getElementById('homeTitle').textContent = title + ' lernen';
+}
+
+function selectLang(lang) {
+  selectedLangs = [lang];
+  const langRow = document.getElementById('langFilterRow');
+  langRow.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.lang === lang);
+  });
+  document.getElementById('homeTitle').textContent = capitalize(lang) + ' lernen';
 }
 
 function toggleFilter(chip, arr, val) {
@@ -1192,18 +1179,15 @@ function cardWeight(key) {
 }
 
 function buildQueue() {
-  // Filter vocab
-  const activeLang = settings.activeLang || 'all';
   const filtered = vocab.filter(v => {
     const catOk = selectedCats.length === 0 || selectedCats.includes(v.kategorie) || !v.kategorie;
     return catOk;
   });
 
-  // Build pairs
+  // Build pairs — only the one selected language
   const pairs = [];
   filtered.forEach(v => {
     v.langs.forEach(l => {
-      if (activeLang !== 'all' && l.name !== activeLang) return;
       if (!selectedLangs.includes(l.name)) return;
       const key = v.deutsch + '|' + l.name;
       pairs.push({ v, l, key });
@@ -1277,11 +1261,9 @@ function showCard() {
   document.getElementById('backPron').textContent = back.pron || '';
   document.getElementById('backCat').textContent  = v.kategorie || '';
 
-  // Lautschrift je nach Einstellung
-  const showPron = settings.showPron || 'back';
-  document.getElementById('frontPron').style.display =
-    (showPron === 'both') ? '' : (showPron === 'none' ? 'none' : (dir === 'foreign-to-de' ? '' : 'none'));
-  document.getElementById('backPron').style.display = showPron === 'none' ? 'none' : '';
+  // Lautschrift immer anzeigen, wenn vorhanden
+  document.getElementById('frontPron').style.display = front.pron ? '' : 'none';
+  document.getElementById('backPron').style.display  = back.pron  ? '' : 'none';
 
   // Strength dots
   const strength = getStrength(key);
@@ -1426,7 +1408,7 @@ function goHome() {
 }
 
 // ── SETTINGS ───────────────────────────────────────────
-let settings = { defaultMode: 'mixed', sessionSize: 20, showPron: 'back', activeLang: 'all' };
+let settings = { defaultMode: 'mixed', sessionSize: 20 };
 
 function loadSettings() {
   try {
@@ -1444,10 +1426,8 @@ function saveSetting(key, value) {
 function applySettings() {
   const dm = document.getElementById('settingDefaultMode');
   const ss = document.getElementById('settingSessionSize');
-  const sp = document.getElementById('settingShowPron');
   if (dm) dm.value = settings.defaultMode;
   if (ss) ss.value = settings.sessionSize;
-  if (sp) sp.value = settings.showPron;
 }
 
 function toggleSettings() {
@@ -1466,17 +1446,7 @@ function resetProgress() {
 }
 
 function updateLangDropdown() {
-  const sel = document.getElementById('settingLang');
-  if (!sel) return;
-  const langs = [...new Set(vocab.flatMap(v => v.langs.map(l => l.name)))];
-  sel.innerHTML = '<option value="all">Alle</option>';
-  langs.forEach(l => {
-    const opt = document.createElement('option');
-    opt.value = l;
-    opt.textContent = capitalize(l);
-    if (settings.activeLang === l) opt.selected = true;
-    sel.appendChild(opt);
-  });
+  // Language selection is now handled by the filter chips on the home screen
 }
 
 // ── AUTO-LOAD CSV FROM GITHUB ──────────────────────────

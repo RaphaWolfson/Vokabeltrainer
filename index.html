@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Vokabeln</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
   :root {
     --bg: #f0ede8;
@@ -733,6 +734,145 @@
   }
 
   .screen.active .card-perspective { animation: fadeUp 0.35s ease both; }
+
+  /* ── LESSONS SCREEN ── */
+  #lessons, #lesson {
+    background: var(--bg);
+    padding: 0;
+  }
+
+  .lessons-list {
+    padding: 8px 24px 48px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .lesson-section-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 20px 0 8px;
+  }
+
+  .lesson-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    text-align: left;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .lesson-card:active { transform: scale(0.98); background: var(--bg); }
+
+  .lesson-num {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 4px 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .lesson-card-title {
+    flex: 1;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  /* ── LESSON DETAIL ── */
+  .lesson-body {
+    padding: 12px 24px 56px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+  }
+
+  .lesson-body h1 { display: none; }
+
+  .lesson-body h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin: 28px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .lesson-body h3 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-secondary);
+    margin: 20px 0 8px;
+  }
+
+  .lesson-body p { margin: 0 0 10px; }
+
+  .lesson-body strong { font-weight: 600; }
+
+  .lesson-body em { font-style: italic; color: var(--text-secondary); }
+
+  .lesson-body ul, .lesson-body ol {
+    padding-left: 18px;
+    margin: 0 0 10px;
+  }
+
+  .lesson-body li { margin-bottom: 4px; }
+
+  .lesson-body hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  .lesson-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 16px;
+    font-size: 0.82rem;
+  }
+
+  .lesson-body th {
+    background: var(--bg);
+    font-weight: 600;
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .lesson-body td {
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .lesson-body tr:nth-child(even) td { background: var(--surface); }
+
+  .lesson-body code {
+    font-family: monospace;
+    background: var(--bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.82em;
+  }
 </style>
 </head>
 <body>
@@ -797,6 +937,14 @@
       <div class="mode-text">
         <div class="mode-name">Gemischt</div>
         <div class="mode-desc">Beide Richtungen zufällig</div>
+      </div>
+      <div class="mode-arrow">›</div>
+    </button>
+    <button class="mode-btn" onclick="showScreen('lessons')">
+      <div class="mode-icon">📖</div>
+      <div class="mode-text">
+        <div class="mode-name">Lektionen</div>
+        <div class="mode-desc">Grammatik & Vokabeln nach Lektion</div>
       </div>
       <div class="mode-arrow">›</div>
     </button>
@@ -924,6 +1072,24 @@
   </div>
   <button class="done-btn"           onclick="startStudy(currentMode)">Nochmal lernen</button>
   <button class="done-btn-secondary" onclick="goHome()">Zur Startseite</button>
+</div>
+
+<!-- ══════════════ LESSONS SCREEN ══════════════ -->
+<div id="lessons" class="screen">
+  <div class="study-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="study-title">Kroatisch – Lektionen</div>
+  </div>
+  <div class="lessons-list" id="lessonsList"></div>
+</div>
+
+<!-- ══════════════ LESSON DETAIL SCREEN ══════════════ -->
+<div id="lesson" class="screen">
+  <div class="study-header">
+    <button class="back-btn" onclick="showScreen('lessons')">←</button>
+    <div class="study-title" id="lessonDetailTitle"></div>
+  </div>
+  <div class="lesson-body" id="lessonBody"></div>
 </div>
 
 <!-- ══════════════ GOAL MODAL ══════════════ -->
@@ -1391,6 +1557,82 @@ function goHome() {
   showScreen('home');
   updateHomeStats();
 }
+
+// ── LEKTIONEN ──────────────────────────────────────────
+const LESSONS = [
+  { file: 'Lektion_01.md', num: '01', title: 'Sein & Haben' },
+  { file: 'Lektion_02.md', num: '02', title: 'Erste Sätze bauen' },
+  { file: 'Lektion_03.md', num: '03', title: 'Verneinung & Fragen' },
+  { file: 'Lektion_04.md', num: '04', title: 'Präsens: Verben auf -ati' },
+  { file: 'Lektion_05.md', num: '05', title: 'Präsens: Verben auf -iti / -jeti' },
+  { file: 'Lektion_06.md', num: '06', title: 'Personalpronomen' },
+  { file: 'Lektion_07.md', num: '07', title: 'Akkusativ' },
+  { file: 'Lektion_08.md', num: '08', title: 'Bewegungsverben' },
+  { file: 'Lektion_09.md', num: '09', title: 'Genitiv' },
+  { file: 'Lektion_10.md', num: '10', title: 'Dativ' },
+  { file: 'Lektion_11.md', num: '11', title: 'Vergangenheit (Perfekt)' },
+  { file: 'Lektion_12.md', num: '12', title: 'Zukunft' },
+  { file: 'Lektion_13.md', num: '13', title: 'Adjektive' },
+  { file: 'Lektion_14.md', num: '14', title: 'Lokativ' },
+  { file: 'Lektion_15.md', num: '15', title: 'Verbalaspekt: Imperfektiv vs. Perfektiv' },
+  { file: 'Lektion_16.md', num: '16', title: 'Modalverben' },
+  { file: 'Lektion_17.md', num: '17', title: 'Imperativ' },
+  { file: 'Lektion_18.md', num: '18', title: 'Konditional' },
+  { file: 'Lektion_19.md', num: '19', title: 'Reflexivverben' },
+  { file: 'Lektion_20.md', num: '20', title: 'Wiederholung & Zusammenfassung' },
+  { file: 'Zusatzlektion_01.md', num: 'Z1', title: 'Ortsangaben: Auf dem Markt', extra: true },
+  { file: 'Zusatzlektion_02.md', num: 'Z2', title: 'Himmelsrichtungen & Wegbeschreibung', extra: true },
+];
+
+function buildLessonsList() {
+  const list = document.getElementById('lessonsList');
+  list.innerHTML = '';
+
+  const main  = LESSONS.filter(l => !l.extra);
+  const extra = LESSONS.filter(l =>  l.extra);
+
+  const addLabel = text => {
+    const lbl = document.createElement('div');
+    lbl.className = 'lesson-section-label';
+    lbl.textContent = text;
+    list.appendChild(lbl);
+  };
+
+  addLabel('Lektionen 1–20');
+  main.forEach(l => list.appendChild(makeLessonCard(l)));
+
+  addLabel('Zusatzlektionen');
+  extra.forEach(l => list.appendChild(makeLessonCard(l)));
+}
+
+function makeLessonCard(l) {
+  const btn = document.createElement('button');
+  btn.className = 'lesson-card';
+  btn.innerHTML = `
+    <span class="lesson-num">Lektion ${l.num}</span>
+    <span class="lesson-card-title">${l.title}</span>
+    <span class="mode-arrow">›</span>`;
+  btn.onclick = () => openLesson(l);
+  return btn;
+}
+
+async function openLesson(l) {
+  document.getElementById('lessonDetailTitle').textContent = l.title;
+  document.getElementById('lessonBody').innerHTML = '<p style="color:var(--text-muted);padding:20px 0">Lade…</p>';
+  showScreen('lesson');
+
+  try {
+    const res = await fetch('Kroatisch_Lektionen/' + l.file);
+    if (!res.ok) throw new Error();
+    const md = await res.text();
+    document.getElementById('lessonBody').innerHTML = marked.parse(md);
+  } catch(e) {
+    document.getElementById('lessonBody').innerHTML =
+      '<p style="color:var(--red)">Lektion konnte nicht geladen werden.</p>';
+  }
+}
+
+buildLessonsList();
 
 // ── SETTINGS ───────────────────────────────────────────
 let settings = { defaultMode: 'mixed', sessionSize: 20 };

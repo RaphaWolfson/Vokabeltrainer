@@ -171,7 +171,8 @@
     font-size: 0.65rem;
     font-weight: 600;
     color: var(--text-secondary);
-    width: 30px;
+    min-width: 30px;
+    white-space: nowrap;
     text-align: right;
     flex-shrink: 0;
   }
@@ -1061,7 +1062,7 @@
       </div>
     </div>
     <div class="progress-labels">
-      <div class="progress-label-day">Heute <span id="studyDayLabel">0</span> · Gesamt <span id="studyTotalLabel">0</span></div>
+      <div class="progress-label-day">Heute <span id="studyDayLabel">0</span> · Gelernt <span id="studyTotalLabel">0</span></div>
     </div>
   </div>
 
@@ -1590,15 +1591,26 @@ function answer(result) {
 // ── PROGRESS ───────────────────────────────────────────
 function getTotalLearned() {
   const lang = activeLang();
+  const relevantKeys = new Set(
+    vocab
+      .filter(v => !selectedCats.length || selectedCats.includes(v.kategorie) || !v.kategorie)
+      .map(v => v.deutsch + '|' + lang)
+  );
   return Object.entries(progress)
-    .filter(([k, p]) => k.endsWith('|' + lang) && p.strength > 0).length;
+    .filter(([k, p]) => relevantKeys.has(k) && p.strength > 0).length;
+}
+
+function getFilteredVocabCount(lang) {
+  return vocab
+    .filter(v => !selectedCats.length || selectedCats.includes(v.kategorie) || !v.kategorie)
+    .flatMap(v => v.langs.filter(l => l.name === lang)).length || 1;
 }
 
 function updateHomeStats() {
   const lang       = activeLang();
   const dayCount   = getTodayCount();
   const totalCount = getTotalLearned();
-  const totalVocab = vocab.flatMap(v => v.langs.filter(l => l.name === lang)).length || 1;
+  const totalVocab = getFilteredVocabCount(lang);
 
   const dayPct   = Math.round(dayCount / dailyGoal * 100);
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
@@ -1608,7 +1620,7 @@ function updateHomeStats() {
   document.getElementById('goalNumBtn').textContent     = dailyGoal;
   document.getElementById('homeTotalCount').textContent = totalCount;
   document.getElementById('homeDayPct').textContent     = dayPct + '%';
-  document.getElementById('homeTotalPct').textContent   = totalPct + '%';
+  document.getElementById('homeTotalPct').textContent   = totalCount + ' / ' + totalVocab;
   document.getElementById('homeProgressDay').style.width   = Math.min(dayPct, 100) + '%';
   document.getElementById('homeProgressTotal').style.width = totalPct + '%';
 }
@@ -1617,17 +1629,17 @@ function updateStudyProgress() {
   const lang       = activeLang();
   const dayCount   = getTodayCount();
   const totalCount = getTotalLearned();
-  const totalVocab = vocab.flatMap(v => v.langs.filter(l => l.name === lang)).length || 1;
+  const totalVocab = getFilteredVocabCount(lang);
 
   const dayPct   = Math.round(dayCount / dailyGoal * 100);
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
 
   document.getElementById('studyProgressDay').style.width   = Math.min(dayPct, 100) + '%';
   document.getElementById('studyProgressTotal').style.width = totalPct + '%';
-  document.getElementById('studyPct').textContent           = dayPct   + '%';
-  document.getElementById('studyTotalPct').textContent      = totalPct + '%';
+  document.getElementById('studyPct').textContent           = dayPct + '%';
+  document.getElementById('studyTotalPct').textContent      = totalCount + ' / ' + totalVocab;
   document.getElementById('studyDayLabel').textContent      = dayCount + '/' + dailyGoal;
-  document.getElementById('studyTotalLabel').textContent    = totalCount;
+  document.getElementById('studyTotalLabel').textContent    = totalCount + ' / ' + totalVocab;
 }
 
 // ── DONE ───────────────────────────────────────────────

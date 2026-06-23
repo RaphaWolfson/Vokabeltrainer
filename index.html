@@ -233,20 +233,25 @@
     background: var(--border);
     border-radius: 3px;
     overflow: hidden;
+    position: relative;
   }
 
   .history-bar-fill {
+    position: absolute;
+    top: 0; left: 0;
     height: 100%;
-    background: var(--progress-day);
     border-radius: 3px;
   }
 
+  .history-bar-fill.seen  { background: var(--progress-total); }
+  .history-bar-fill.right { background: var(--progress-day); }
+
   .history-count {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--text-secondary);
     white-space: nowrap;
-    min-width: 48px;
     text-align: right;
+    line-height: 1.4;
   }
 
   .history-count.reached { color: var(--green); font-weight: 600; }
@@ -1725,12 +1730,19 @@ function buildHistory() {
   const goal = dailyGoals[lang] || 10;
   document.getElementById('historyTitle').textContent = capitalize(lang) + ' – Verlauf';
 
-  // Collect all days for this language from todayStats
   const prefix = '|' + lang;
-  const days = Object.entries(todayStats)
-    .filter(([k]) => k.endsWith(prefix))
-    .map(([k, count]) => ({ date: k.replace(prefix, ''), count }))
-    .sort((a, b) => b.date.localeCompare(a.date)); // newest first
+  const dates = new Set([
+    ...Object.keys(todayStats).filter(k => k.endsWith(prefix)).map(k => k.replace(prefix, '')),
+    ...Object.keys(todayRight).filter(k => k.endsWith(prefix)).map(k => k.replace(prefix, '')),
+  ]);
+
+  const days = [...dates]
+    .map(date => ({
+      date,
+      seen:  todayStats[date + prefix] || 0,
+      right: todayRight[date + prefix] || 0,
+    }))
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   const list = document.getElementById('historyList');
   list.innerHTML = '';
@@ -1740,9 +1752,10 @@ function buildHistory() {
     return;
   }
 
-  days.forEach(({ date, count }) => {
-    const pct = Math.min(100, Math.round(count / goal * 100));
-    const reached = count >= goal;
+  days.forEach(({ date, seen, right }) => {
+    const seenPct  = Math.min(100, Math.round(seen  / goal * 100));
+    const rightPct = Math.min(100, Math.round(right / goal * 100));
+    const reached  = right >= goal;
     const [y, m, d] = date.split('-');
     const label = new Date(+y, +m - 1, +d).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
 
@@ -1750,8 +1763,13 @@ function buildHistory() {
     row.className = 'history-day';
     row.innerHTML = `
       <span class="history-date">${label}</span>
-      <div class="history-bar-wrap"><div class="history-bar-fill" style="width:${pct}%"></div></div>
-      <span class="history-count${reached ? ' reached' : ''}">${count} / ${goal}</span>`;
+      <div class="history-bar-wrap">
+        <div class="history-bar-fill seen"  style="width:${seenPct}%"></div>
+        <div class="history-bar-fill right" style="width:${rightPct}%"></div>
+      </div>
+      <span class="history-count${reached ? ' reached' : ''}">
+        <span style="color:var(--text-primary);font-weight:600">${right}</span> ✓&nbsp;&nbsp;${seen} ges.
+      </span>`;
     list.appendChild(row);
   });
 }

@@ -54,6 +54,25 @@
 
   .home-header {
     margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .home-gear-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: none;
+    background: var(--white);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 4px;
   }
 
   .home-greeting {
@@ -409,36 +428,6 @@
   }
 
   /* ── SETTINGS ── */
-  .settings-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    border-radius: 16px;
-    padding: 14px 18px;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    margin-top: 6px;
-    width: 100%;
-    transition: all 0.15s;
-  }
-
-  .settings-toggle:active { background: var(--bg); }
-  .settings-toggle-left { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 500; color: var(--text-primary); }
-  .settings-toggle-arrow { color: var(--text-muted); font-size: 0.8rem; transition: transform 0.2s; }
-  .settings-toggle-arrow.open { transform: rotate(90deg); }
-
-  .settings-panel {
-    background: var(--white);
-    border: 1.5px solid var(--border);
-    border-radius: 16px;
-    padding: 18px;
-    margin-top: 8px;
-    display: none;
-  }
-
-  .settings-panel.open { display: block; }
 
   .settings-row {
     display: flex;
@@ -970,8 +959,11 @@
 <div id="home" class="screen active">
 
   <div class="home-header">
-    <div class="home-greeting">Guten Tag</div>
-    <div class="home-title" id="homeTitle">Vokabeln</div>
+    <div>
+      <div class="home-greeting">Guten Tag</div>
+      <div class="home-title" id="homeTitle">Vokabeln</div>
+    </div>
+    <button class="home-gear-btn" onclick="openSettings()">⚙️</button>
   </div>
 
   <!-- Language filter -->
@@ -1003,12 +995,6 @@
     <div class="goal-stats">
       <div class="goal-count"><strong id="homeDayCount">0</strong> / <span id="homeGoalNum">10</span> heute · <span id="homeTotalCount">0</span> gesamt</div>
     </div>
-  </div>
-
-  <!-- Category filter -->
-  <div id="catFilterSection" style="display:none">
-    <div class="section-label">Kategorie</div>
-    <div class="filter-row" id="catFilterRow"></div>
   </div>
 
   <!-- Modes -->
@@ -1046,43 +1032,6 @@
       </div>
       <div class="mode-arrow">›</div>
     </button>
-  </div>
-
-  <!-- Settings -->
-  <div class="section-label">Einstellungen</div>
-  <button class="settings-toggle" onclick="toggleSettings()">
-    <div class="settings-toggle-left">⚙️ Einstellungen anpassen</div>
-    <div class="settings-toggle-arrow" id="settingsArrow">›</div>
-  </button>
-  <div class="settings-panel" id="settingsPanel">
-
-    <div class="settings-row">
-      <div>
-        <div class="settings-label">Standard-Modus</div>
-        <div class="settings-sublabel">Beim Start vorausgewählt</div>
-      </div>
-      <select class="settings-select" id="settingDefaultMode" onchange="saveSetting('defaultMode', this.value)">
-        <option value="mixed">Gemischt</option>
-        <option value="de-to-foreign">DE → Sprache</option>
-        <option value="foreign-to-de">Sprache → DE</option>
-      </select>
-    </div>
-
-    <div class="settings-row">
-      <div>
-        <div class="settings-label">Karten pro Session</div>
-        <div class="settings-sublabel">Max. Anzahl Karten</div>
-      </div>
-      <select class="settings-select" id="settingSessionSize" onchange="saveSetting('sessionSize', this.value)">
-        <option value="10">10</option>
-        <option value="20" selected>20</option>
-        <option value="30">30</option>
-        <option value="50">50</option>
-        <option value="999">Alle</option>
-      </select>
-    </div>
-
-    <button class="settings-reset" onclick="resetProgress()">🗑 Lernfortschritt zurücksetzen</button>
   </div>
 
   <input type="file" id="fileInput" accept=".csv,.txt" onchange="loadCSV(event)" style="display:none">
@@ -1205,6 +1154,35 @@
     <div class="study-title" id="lessonDetailTitle"></div>
   </div>
   <div class="lesson-body" id="lessonBody"></div>
+</div>
+
+<!-- ══════════════ SETTINGS MODAL ══════════════ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Einstellungen</div>
+
+    <div class="settings-row" style="padding-top:0">
+      <div>
+        <div class="settings-label">Karten pro Session</div>
+        <div class="settings-sublabel">Max. Anzahl Karten</div>
+      </div>
+      <select class="settings-select" id="settingSessionSize" onchange="saveSetting('sessionSize', this.value)">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="30">30</option>
+        <option value="50">50</option>
+        <option value="999">Alle</option>
+      </select>
+    </div>
+
+    <div class="settings-row" id="settingsCatRow" style="display:none; flex-direction:column; align-items:flex-start; gap:10px">
+      <div class="settings-label">Kategorien</div>
+      <div class="filter-row" id="catFilterRow" style="flex-wrap:wrap"></div>
+    </div>
+
+    <button class="settings-reset" onclick="resetProgress()">🗑 Lernfortschritt zurücksetzen</button>
+  </div>
 </div>
 
 <!-- ══════════════ GOAL MODAL ══════════════ -->
@@ -1372,16 +1350,15 @@ function buildFilters() {
     langSection.style.display = 'none';
   }
 
-  // Category filter
-  const catSection = document.getElementById('catFilterSection');
+  // Category filter — lives in settings modal
   const catRow     = document.getElementById('catFilterRow');
+  const catSection = document.getElementById('settingsCatRow');
   catRow.innerHTML = '';
   if (cats.length > 0) {
-    catSection.style.display = 'block';
+    catSection.style.display = 'flex';
     const allChip = document.createElement('button');
     allChip.className = 'filter-chip active';
     allChip.textContent = 'Alle';
-    allChip.dataset.cat = '__all__';
     allChip.onclick = () => {
       selectedCats = [...cats];
       catRow.querySelectorAll('.filter-chip').forEach(c => c.classList.add('active'));
@@ -1685,6 +1662,16 @@ document.getElementById('goalModal').addEventListener('click', e => {
     document.getElementById('goalModal').classList.remove('open');
 });
 
+// ── SETTINGS MODAL ─────────────────────────────────────
+function openSettings() {
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+document.getElementById('settingsModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('settingsModal'))
+    document.getElementById('settingsModal').classList.remove('open');
+});
+
 // ── NAVIGATION ─────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -1826,17 +1813,8 @@ function saveSetting(key, value) {
 }
 
 function applySettings() {
-  const dm = document.getElementById('settingDefaultMode');
   const ss = document.getElementById('settingSessionSize');
-  if (dm) dm.value = settings.defaultMode;
   if (ss) ss.value = settings.sessionSize;
-}
-
-function toggleSettings() {
-  const panel = document.getElementById('settingsPanel');
-  const arrow = document.getElementById('settingsArrow');
-  panel.classList.toggle('open');
-  arrow.classList.toggle('open');
 }
 
 function resetProgress() {

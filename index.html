@@ -156,15 +156,19 @@
     background: var(--border);
     border-radius: 3px;
     overflow: hidden;
+    position: relative;
   }
 
   .goal-bar-fill {
+    position: absolute;
+    top: 0; left: 0;
     height: 100%;
     border-radius: 3px;
     transition: width 0.6s ease;
   }
 
   .goal-bar-fill.day   { background: var(--progress-day); }
+  .goal-bar-fill.seen  { background: var(--progress-total); }
   .goal-bar-fill.total { background: var(--progress-total); }
 
   .goal-bar-pct {
@@ -984,7 +988,10 @@
     <div class="goal-bars">
       <div class="goal-bar-row">
         <span class="goal-bar-label">Heute</span>
-        <div class="goal-bar-track"><div class="goal-bar-fill day" id="homeProgressDay" style="width:0%"></div></div>
+        <div class="goal-bar-track">
+          <div class="goal-bar-fill seen" id="homeProgressSeen" style="width:0%"></div>
+          <div class="goal-bar-fill day"  id="homeProgressDay"  style="width:0%"></div>
+        </div>
         <span class="goal-bar-pct" id="homeDayPct">0%</span>
       </div>
       <div class="goal-bar-row">
@@ -1052,7 +1059,10 @@
     <div class="goal-bars" style="margin-bottom:6px">
       <div class="goal-bar-row">
         <span class="goal-bar-label">Heute</span>
-        <div class="goal-bar-track"><div class="goal-bar-fill day" id="studyProgressDay" style="width:0%"></div></div>
+        <div class="goal-bar-track">
+          <div class="goal-bar-fill seen" id="studyProgressSeen" style="width:0%"></div>
+          <div class="goal-bar-fill day"  id="studyProgressDay"  style="width:0%"></div>
+        </div>
         <span class="goal-bar-pct" id="studyPct">0%</span>
       </div>
       <div class="goal-bar-row">
@@ -1204,7 +1214,8 @@
 // ── STATE ──────────────────────────────────────────────
 let vocab = [];          // [{kategorie, deutsch, langs:[{name,word,pron}]}]
 let progress = {};       // key: "deutsch|langName" → {strength, streak}
-let todayStats = {};     // key: "date|lang" → count reviewed
+let todayStats = {};     // key: "date|lang" → count seen (right+wrong)
+let todayRight = {};     // key: "date|lang" → count correct only
 let dailyGoals = {};     // key: langName → goal number
 let dailyGoal = 10;      // mirrors dailyGoals[activeLang()], updated on lang switch
 let tempGoal = 10;
@@ -1224,7 +1235,7 @@ const STORAGE_KEY = 'vokabel_progress_v1';
 
 // ── PERSISTENCE ────────────────────────────────────────
 function saveState() {
-  const data = { progress, todayStats, dailyGoals };
+  const data = { progress, todayStats, todayRight, dailyGoals };
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
 }
 
@@ -1235,8 +1246,8 @@ function loadState() {
     const data = JSON.parse(raw);
     progress   = data.progress   || {};
     todayStats = data.todayStats || {};
+    todayRight = data.todayRight || {};
     dailyGoals = data.dailyGoals || {};
-    // migrate old single dailyGoal value
     if (!data.dailyGoals && data.dailyGoal) dailyGoal = data.dailyGoal;
   } catch(e) {}
 }
@@ -1250,13 +1261,13 @@ function todayKey() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function getTodayCount() {
-  return todayStats[todayKey() + '|' + activeLang()] || 0;
-}
+function getTodayCount()  { return todayStats[todayKey() + '|' + activeLang()] || 0; }
+function getTodayRight()  { return todayRight[todayKey() + '|' + activeLang()] || 0; }
 
-function incrementToday() {
+function incrementToday(correct) {
   const k = todayKey() + '|' + activeLang();
   todayStats[k] = (todayStats[k] || 0) + 1;
+  if (correct) todayRight[k] = (todayRight[k] || 0) + 1;
   saveState();
 }
 
@@ -1580,8 +1591,8 @@ function lockButtons(lock) {
 function answer(result) {
   if (!isFlipped) return;
   updateStrength(currentCard.key, result);
-  if (result === 'right') { sessionRight++; incrementToday(); }
-  else if (result === 'wrong') { sessionWrong++; incrementToday(); }
+  if (result === 'right') { sessionRight++; incrementToday(true); }
+  else if (result === 'wrong') { sessionWrong++; incrementToday(false); }
   // skip: don't count toward today goal
   sessionIndex++;
   updateHomeStats();
@@ -1608,37 +1619,43 @@ function getFilteredVocabCount(lang) {
 
 function updateHomeStats() {
   const lang       = activeLang();
-  const dayCount   = getTodayCount();
+  const seenCount  = getTodayCount();
+  const rightCount = getTodayRight();
   const totalCount = getTotalLearned();
   const totalVocab = getFilteredVocabCount(lang);
 
-  const dayPct   = Math.round(dayCount / dailyGoal * 100);
+  const seenPct  = Math.round(seenCount  / dailyGoal * 100);
+  const rightPct = Math.round(rightCount / dailyGoal * 100);
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
 
-  document.getElementById('homeDayCount').textContent   = dayCount;
+  document.getElementById('homeDayCount').textContent   = rightCount;
   document.getElementById('homeGoalNum').textContent    = dailyGoal;
   document.getElementById('goalNumBtn').textContent     = dailyGoal;
   document.getElementById('homeTotalCount').textContent = totalCount;
-  document.getElementById('homeDayPct').textContent     = dayPct + '%';
+  document.getElementById('homeDayPct').textContent     = rightPct + '%';
   document.getElementById('homeTotalPct').textContent   = totalCount + ' / ' + totalVocab;
-  document.getElementById('homeProgressDay').style.width   = Math.min(dayPct, 100) + '%';
+  document.getElementById('homeProgressSeen').style.width  = Math.min(seenPct,  100) + '%';
+  document.getElementById('homeProgressDay').style.width   = Math.min(rightPct, 100) + '%';
   document.getElementById('homeProgressTotal').style.width = totalPct + '%';
 }
 
 function updateStudyProgress() {
   const lang       = activeLang();
-  const dayCount   = getTodayCount();
+  const seenCount  = getTodayCount();
+  const rightCount = getTodayRight();
   const totalCount = getTotalLearned();
   const totalVocab = getFilteredVocabCount(lang);
 
-  const dayPct   = Math.round(dayCount / dailyGoal * 100);
+  const seenPct  = Math.round(seenCount  / dailyGoal * 100);
+  const rightPct = Math.round(rightCount / dailyGoal * 100);
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
 
-  document.getElementById('studyProgressDay').style.width   = Math.min(dayPct, 100) + '%';
+  document.getElementById('studyProgressSeen').style.width  = Math.min(seenPct,  100) + '%';
+  document.getElementById('studyProgressDay').style.width   = Math.min(rightPct, 100) + '%';
   document.getElementById('studyProgressTotal').style.width = totalPct + '%';
-  document.getElementById('studyPct').textContent           = dayPct + '%';
+  document.getElementById('studyPct').textContent           = rightPct + '%';
   document.getElementById('studyTotalPct').textContent      = totalCount + ' / ' + totalVocab;
-  document.getElementById('studyDayLabel').textContent      = dayCount + '/' + dailyGoal;
+  document.getElementById('studyDayLabel').textContent      = rightCount + '/' + dailyGoal;
   document.getElementById('studyTotalLabel').textContent    = totalCount + ' / ' + totalVocab;
 }
 

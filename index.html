@@ -1207,9 +1207,6 @@ function parseCSV(text) {
   updateLangDropdown();
   updateHomeStats();
 
-  const badge = document.getElementById('vocabBadge');
-  badge.textContent = vocab.length + ' Vokabeln geladen';
-  badge.style.display = 'inline-block';
 }
 
 function splitCSVLine(line) {
@@ -1229,7 +1226,9 @@ function buildFilters() {
   const langs = [...new Set(vocab.flatMap(v => v.langs.map(l => l.name)))];
   const cats  = [...new Set(vocab.map(v => v.kategorie).filter(Boolean))];
 
-  selectedLangs = langs.length ? [langs[0]] : [];
+  const savedLang = localStorage.getItem('vokabel_lang_v1');
+  const defaultLang = (savedLang && langs.includes(savedLang)) ? savedLang : (langs[0] || '');
+  selectedLangs = defaultLang ? [defaultLang] : [];
   selectedCats  = cats.length ? [...cats] : [];
 
   // Language filter — single selection (radio style)
@@ -1238,9 +1237,9 @@ function buildFilters() {
   langRow.innerHTML = '';
   if (langs.length > 1) {
     langSection.style.display = 'block';
-    langs.forEach((l, idx) => {
+    langs.forEach(l => {
       const chip = document.createElement('button');
-      chip.className = 'filter-chip' + (idx === 0 ? ' active' : '');
+      chip.className = 'filter-chip' + (l === defaultLang ? ' active' : '');
       chip.textContent = capitalize(l);
       chip.dataset.lang = l;
       chip.onclick = () => selectLang(l);
@@ -1284,6 +1283,7 @@ function buildFilters() {
 
 function selectLang(lang) {
   selectedLangs = [lang];
+  localStorage.setItem('vokabel_lang_v1', lang);
   const langRow = document.getElementById('langFilterRow');
   langRow.querySelectorAll('.filter-chip').forEach(chip => {
     chip.classList.toggle('active', chip.dataset.lang === lang);
@@ -1392,9 +1392,12 @@ function showCard() {
 
   currentCard = { front, back, cat: v.kategorie, key };
 
-  // Reset flip
+  // Reset flip without playing the reverse animation
   const inner = document.getElementById('cardInner');
+  inner.style.transition = 'none';
   inner.classList.remove('flipped');
+  inner.offsetHeight; // force reflow so the state is applied before transition is re-enabled
+  inner.style.transition = '';
 
   // Fill front
   document.getElementById('frontLang').textContent = front.lang.toUpperCase();

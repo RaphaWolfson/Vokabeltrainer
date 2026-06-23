@@ -510,6 +510,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    touch-action: none;
+    cursor: pointer;
   }
 
   .card-perspective {
@@ -1026,7 +1028,7 @@
     </div>
   </div>
 
-  <div class="card-area" id="swipeZone" onclick="flipCard()">
+  <div class="card-area" id="swipeZone">
     <div class="card-perspective">
       <div class="card-inner" id="cardInner">
         <div class="swipe-overlay" id="swipeOverlay"></div>
@@ -1713,23 +1715,22 @@ function initSwipe() {
   const zone    = document.getElementById('swipeZone');
   const overlay = document.getElementById('swipeOverlay');
   const THRESHOLD = 72;
-  let startX = 0, startY = 0, dx = 0, swiping = false;
+  let startX = 0, dx = 0, swiping = false;
 
+  // non-passive so we can call preventDefault and take full control
   zone.addEventListener('touchstart', e => {
+    e.preventDefault();
     startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
     dx = 0; swiping = false;
-  }, { passive: true });
+  }, { passive: false });
 
   zone.addEventListener('touchmove', e => {
-    const curDx = e.touches[0].clientX - startX;
-    const curDy = e.touches[0].clientY - startY;
-    if (!isFlipped) return; // vor dem Umdrehen: kein Swipe, Click darf feuern
-    if (!swiping && Math.abs(curDx) < 8) return;
-    if (Math.abs(curDy) > Math.abs(curDx)) return;
-    swiping = true;
     e.preventDefault();
-    dx = curDx;
+    dx = e.touches[0].clientX - startX;
+
+    if (!isFlipped) return; // no visual feedback before flip
+    if (Math.abs(dx) < 8) return;
+    swiping = true;
 
     const pct = Math.min(Math.abs(dx) / THRESHOLD, 1);
     wrap.style.transform = `translateX(${dx * 0.35}px) rotate(${dx * 0.035}deg)`;
@@ -1746,11 +1747,16 @@ function initSwipe() {
     overlay.style.opacity = pct;
   }, { passive: false });
 
-  zone.addEventListener('touchend', () => {
+  zone.addEventListener('touchend', e => {
+    e.preventDefault();
     overlay.style.opacity = 0;
     overlay.textContent = '';
 
-    if (!swiping) return;
+    if (!swiping) {
+      // it was a tap — flip the card
+      flipCard();
+      return;
+    }
 
     if (Math.abs(dx) >= THRESHOLD && isFlipped) {
       const dir = dx > 0 ? 1 : -1;
@@ -1768,7 +1774,7 @@ function initSwipe() {
       setTimeout(() => { wrap.style.transition = ''; }, 250);
     }
     swiping = false;
-  });
+  }, { passive: false });
 }
 
 // ── INIT ───────────────────────────────────────────────

@@ -823,14 +823,14 @@
 
   /* ── SWIPE ── */
   .swipe-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 10;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2.4rem;
+    font-size: 5rem;
     opacity: 0;
     transition: opacity 0.08s;
   }
@@ -1041,7 +1041,7 @@
       <div class="mode-icon">🌐</div>
       <div class="mode-text">
         <div class="mode-name"><span class="mode-lang-name">Fremdsprache</span> → Deutsch</div>
-        <div class="mode-desc">Du siehst das fremde Wort</div>
+        <div class="mode-desc">Du siehst das <span class="mode-lang-name">Fremdsprache</span>-Wort</div>
       </div>
       <div class="mode-arrow">›</div>
     </button>
@@ -1057,7 +1057,7 @@
       <div class="mode-icon">📖</div>
       <div class="mode-text">
         <div class="mode-name">Lektionen</div>
-        <div class="mode-desc">Grammatik & Vokabeln nach Lektion</div>
+        <div class="mode-desc">Kroatische Lektionen</div>
       </div>
       <div class="mode-arrow">›</div>
     </button>
@@ -1243,6 +1243,7 @@ let todayRight = {};     // key: "date|lang" → count correct only
 let dailyGoals = {};     // key: langName → goal number
 let dailyGoal = 10;      // mirrors dailyGoals[activeLang()], updated on lang switch
 let tempGoal = 10;
+let catsAllMode = true;  // true = "Alle" active, false = specific selection
 
 let selectedLangs = [];
 let selectedCats  = [];
@@ -1387,33 +1388,55 @@ function buildFilters() {
   }
 
   // Category filter — lives in settings modal
-  const savedCats = (() => {
+  const savedData = (() => {
     try { const s = localStorage.getItem('vokabel_cats_v1'); return s ? JSON.parse(s) : null; } catch { return null; }
   })();
-  selectedCats = savedCats ? cats.filter(c => savedCats.includes(c)) : [...cats];
-  if (!selectedCats.length) selectedCats = [...cats];
+  if (savedData && savedData.mode === 'specific' && savedData.cats?.length) {
+    catsAllMode = false;
+    selectedCats = cats.filter(c => savedData.cats.includes(c));
+    if (!selectedCats.length) { catsAllMode = true; selectedCats = [...cats]; }
+  } else {
+    catsAllMode = true;
+    selectedCats = [...cats];
+  }
 
   const catRow     = document.getElementById('catFilterRow');
   const catSection = document.getElementById('settingsCatRow');
   catRow.innerHTML = '';
   if (cats.length > 0) {
     catSection.style.display = 'flex';
+
     const allChip = document.createElement('button');
-    allChip.className = 'filter-chip' + (selectedCats.length === cats.length ? ' active' : '');
+    allChip.className = 'filter-chip' + (catsAllMode ? ' active' : '');
     allChip.textContent = 'Alle';
     allChip.onclick = () => {
+      catsAllMode = true;
       selectedCats = [...cats];
       saveCats();
-      catRow.querySelectorAll('.filter-chip').forEach(c => c.classList.add('active'));
-      document.getElementById('settingsModal').classList.remove('open');
+      allChip.classList.add('active');
+      catRow.querySelectorAll('[data-cat]').forEach(c => c.classList.remove('active'));
     };
     catRow.appendChild(allChip);
+
     cats.forEach(c => {
       const chip = document.createElement('button');
-      chip.className = 'filter-chip' + (selectedCats.includes(c) ? ' active' : '');
+      chip.className = 'filter-chip' + (!catsAllMode && selectedCats.includes(c) ? ' active' : '');
       chip.textContent = c;
       chip.dataset.cat = c;
-      chip.onclick = () => { toggleFilter(chip, selectedCats, c); saveCats(); };
+      chip.onclick = () => {
+        if (catsAllMode) {
+          catsAllMode = false;
+          allChip.classList.remove('active');
+          selectedCats = [];
+        }
+        toggleFilter(chip, selectedCats, c);
+        if (!selectedCats.length) {
+          catsAllMode = true;
+          allChip.classList.add('active');
+          selectedCats = [...cats];
+        }
+        saveCats();
+      };
       catRow.appendChild(chip);
     });
   } else {
@@ -1454,7 +1477,8 @@ function toggleFilter(chip, arr, val) {
 }
 
 function saveCats() {
-  try { localStorage.setItem('vokabel_cats_v1', JSON.stringify(selectedCats)); } catch(e) {}
+  const data = catsAllMode ? { mode: 'all' } : { mode: 'specific', cats: selectedCats };
+  try { localStorage.setItem('vokabel_cats_v1', JSON.stringify(data)); } catch(e) {}
 }
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }

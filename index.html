@@ -902,6 +902,12 @@
     <div class="home-title" id="homeTitle">Vokabeln</div>
   </div>
 
+  <!-- Language filter -->
+  <div id="langFilterSection" style="display:none">
+    <div class="section-label">Sprache</div>
+    <div class="filter-row" id="langFilterRow" style="flex-wrap:nowrap"></div>
+  </div>
+
   <!-- Daily goal -->
   <div class="goal-card">
     <div class="goal-card-top">
@@ -916,12 +922,6 @@
       <div class="goal-count"><strong id="homeDayCount">0</strong> / <span id="homeGoalNum">10</span> heute · <span id="homeTotalCount">0</span> gesamt</div>
       <div class="goal-pct" id="homeDayPct">0%</div>
     </div>
-  </div>
-
-  <!-- Language filter -->
-  <div id="langFilterSection" style="display:none">
-    <div class="section-label">Sprache</div>
-    <div class="filter-row" id="langFilterRow" style="flex-wrap:nowrap"></div>
   </div>
 
   <!-- Category filter -->
@@ -1127,9 +1127,10 @@
 <script>
 // ── STATE ──────────────────────────────────────────────
 let vocab = [];          // [{kategorie, deutsch, langs:[{name,word,pron}]}]
-let progress = {};       // key: "deutsch|langName" → {strength, streak, lastSeen}
-let todayStats = {};     // key: date string → count reviewed
-let dailyGoal = 10;
+let progress = {};       // key: "deutsch|langName" → {strength, streak}
+let todayStats = {};     // key: "date|lang" → count reviewed
+let dailyGoals = {};     // key: langName → goal number
+let dailyGoal = 10;      // mirrors dailyGoals[activeLang()], updated on lang switch
 let tempGoal = 10;
 
 let selectedLangs = [];
@@ -1147,7 +1148,7 @@ const STORAGE_KEY = 'vokabel_progress_v1';
 
 // ── PERSISTENCE ────────────────────────────────────────
 function saveState() {
-  const data = { progress, todayStats, dailyGoal };
+  const data = { progress, todayStats, dailyGoals };
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e){}
 }
 
@@ -1158,8 +1159,14 @@ function loadState() {
     const data = JSON.parse(raw);
     progress   = data.progress   || {};
     todayStats = data.todayStats || {};
-    dailyGoal  = data.dailyGoal  || 10;
+    dailyGoals = data.dailyGoals || {};
+    // migrate old single dailyGoal value
+    if (!data.dailyGoals && data.dailyGoal) dailyGoal = data.dailyGoal;
   } catch(e) {}
+}
+
+function activeLang() {
+  return selectedLangs[0] || '';
 }
 
 function todayKey() {
@@ -1167,11 +1174,11 @@ function todayKey() {
 }
 
 function getTodayCount() {
-  return todayStats[todayKey()] || 0;
+  return todayStats[todayKey() + '|' + activeLang()] || 0;
 }
 
 function incrementToday() {
-  const k = todayKey();
+  const k = todayKey() + '|' + activeLang();
   todayStats[k] = (todayStats[k] || 0) + 1;
   saveState();
 }
@@ -1294,6 +1301,9 @@ function buildFilters() {
     catSection.style.display = 'none';
   }
 
+  // sync dailyGoal for the initially selected language
+  dailyGoal = dailyGoals[defaultLang] || 10;
+
   // Title
   const title = selectedLangs.length ? capitalize(selectedLangs[0]) : 'Vokabeln';
   document.getElementById('homeTitle').textContent = title + ' lernen';
@@ -1302,11 +1312,13 @@ function buildFilters() {
 function selectLang(lang) {
   selectedLangs = [lang];
   localStorage.setItem('vokabel_lang_v1', lang);
+  dailyGoal = dailyGoals[lang] || 10;
   const langRow = document.getElementById('langFilterRow');
   langRow.querySelectorAll('.filter-chip').forEach(chip => {
     chip.classList.toggle('active', chip.dataset.lang === lang);
   });
   document.getElementById('homeTitle').textContent = capitalize(lang) + ' lernen';
+  updateHomeStats();
 }
 
 function toggleFilter(chip, arr, val) {
@@ -1491,13 +1503,16 @@ function answer(result) {
 
 // ── PROGRESS ───────────────────────────────────────────
 function getTotalLearned() {
-  return Object.values(progress).filter(p => p.strength > 0).length;
+  const lang = activeLang();
+  return Object.entries(progress)
+    .filter(([k, p]) => k.endsWith('|' + lang) && p.strength > 0).length;
 }
 
 function updateHomeStats() {
+  const lang       = activeLang();
   const dayCount   = getTodayCount();
   const totalCount = getTotalLearned();
-  const totalVocab = vocab.flatMap(v => v.langs).length || 1;
+  const totalVocab = vocab.flatMap(v => v.langs.filter(l => l.name === lang)).length || 1;
 
   const dayPct   = Math.min(100, Math.round(dayCount / dailyGoal * 100));
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
@@ -1511,9 +1526,10 @@ function updateHomeStats() {
 }
 
 function updateStudyProgress() {
+  const lang       = activeLang();
   const dayCount   = getTodayCount();
   const totalCount = getTotalLearned();
-  const totalVocab = vocab.flatMap(v => v.langs).length || 1;
+  const totalVocab = vocab.flatMap(v => v.langs.filter(l => l.name === lang)).length || 1;
 
   const dayPct   = Math.min(100, Math.round(dayCount / dailyGoal * 100));
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
@@ -1546,7 +1562,7 @@ function showDone() {
 
 // ── GOAL MODAL ─────────────────────────────────────────
 function openGoalModal() {
-  tempGoal = dailyGoal;
+  tempGoal = dailyGoals[activeLang()] || 10;
   document.getElementById('goalModalNum').textContent = tempGoal;
   document.getElementById('goalModal').classList.add('open');
 }
@@ -1557,6 +1573,7 @@ function adjustGoal(delta) {
 }
 
 function saveGoal() {
+  dailyGoals[activeLang()] = tempGoal;
   dailyGoal = tempGoal;
   saveState();
   updateHomeStats();
@@ -1780,7 +1797,6 @@ function initSwipe() {
 // ── INIT ───────────────────────────────────────────────
 loadState();
 loadSettings();
-document.getElementById('homeGoalNum').textContent = dailyGoal;
 updateHomeStats();
 autoLoadCSV();
 initSwipe();

@@ -108,31 +108,53 @@
     background: var(--bg);
   }
 
-  .goal-progress-wrap {
-    position: relative;
-    height: 8px;
-    background: var(--border);
-    border-radius: 4px;
+  .goal-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     margin-bottom: 10px;
+  }
+
+  .goal-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .goal-bar-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    width: 38px;
+    flex-shrink: 0;
+  }
+
+  .goal-bar-track {
+    flex: 1;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
     overflow: hidden;
   }
 
-  .goal-progress-total {
-    position: absolute;
-    top: 0; left: 0;
+  .goal-bar-fill {
     height: 100%;
-    background: var(--progress-total);
-    border-radius: 4px;
+    border-radius: 3px;
     transition: width 0.6s ease;
   }
 
-  .goal-progress-day {
-    position: absolute;
-    top: 0; left: 0;
-    height: 100%;
-    background: var(--progress-day);
-    border-radius: 4px;
-    transition: width 0.6s ease;
+  .goal-bar-fill.day   { background: var(--progress-day); }
+  .goal-bar-fill.total { background: var(--progress-total); }
+
+  .goal-bar-pct {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    width: 30px;
+    text-align: right;
+    flex-shrink: 0;
   }
 
   .goal-stats {
@@ -151,11 +173,59 @@
     font-weight: 600;
   }
 
-  .goal-pct {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--text-secondary);
+  /* ── HISTORY SCREEN ── */
+  #history {
+    background: var(--bg);
+    padding: 0;
   }
+
+  .history-list {
+    padding: 8px 24px 48px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .history-day {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .history-date {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 80px;
+  }
+
+  .history-bar-wrap {
+    flex: 1;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .history-bar-fill {
+    height: 100%;
+    background: var(--progress-day);
+    border-radius: 3px;
+  }
+
+  .history-count {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    min-width: 48px;
+    text-align: right;
+  }
+
+  .history-count.reached { color: var(--green); font-weight: 600; }
 
   /* Filter section */
   .section-label {
@@ -913,15 +983,25 @@
   <div class="goal-card">
     <div class="goal-card-top">
       <span class="goal-label">Tagesziel</span>
-      <button class="goal-edit-btn" onclick="openGoalModal()">Bearbeiten</button>
+      <div style="display:flex;gap:6px">
+        <button class="goal-edit-btn" onclick="showScreen('history')" title="Verlauf">📅</button>
+        <button class="goal-edit-btn" onclick="openGoalModal()">Bearbeiten</button>
+      </div>
     </div>
-    <div class="goal-progress-wrap">
-      <div class="goal-progress-total" id="homeProgressTotal" style="width:0%"></div>
-      <div class="goal-progress-day"   id="homeProgressDay"   style="width:0%"></div>
+    <div class="goal-bars">
+      <div class="goal-bar-row">
+        <span class="goal-bar-label">Heute</span>
+        <div class="goal-bar-track"><div class="goal-bar-fill day" id="homeProgressDay" style="width:0%"></div></div>
+        <span class="goal-bar-pct" id="homeDayPct">0%</span>
+      </div>
+      <div class="goal-bar-row">
+        <span class="goal-bar-label">Gesamt</span>
+        <div class="goal-bar-track"><div class="goal-bar-fill total" id="homeProgressTotal" style="width:0%"></div></div>
+        <span class="goal-bar-pct" id="homeTotalPct">0%</span>
+      </div>
     </div>
     <div class="goal-stats">
       <div class="goal-count"><strong id="homeDayCount">0</strong> / <span id="homeGoalNum">10</span> heute · <span id="homeTotalCount">0</span> gesamt</div>
-      <div class="goal-pct" id="homeDayPct">0%</div>
     </div>
   </div>
 
@@ -1019,13 +1099,20 @@
   </div>
 
   <div class="progress-wrap">
-    <div class="progress-track">
-      <div class="progress-total-fill" id="studyProgressTotal" style="width:0%"></div>
-      <div class="progress-day-fill"   id="studyProgressDay"   style="width:0%"></div>
+    <div class="goal-bars" style="margin-bottom:6px">
+      <div class="goal-bar-row">
+        <span class="goal-bar-label">Heute</span>
+        <div class="goal-bar-track"><div class="goal-bar-fill day" id="studyProgressDay" style="width:0%"></div></div>
+        <span class="goal-bar-pct" id="studyPct">0%</span>
+      </div>
+      <div class="goal-bar-row">
+        <span class="goal-bar-label">Gesamt</span>
+        <div class="goal-bar-track"><div class="goal-bar-fill total" id="studyProgressTotal" style="width:0%"></div></div>
+        <span class="goal-bar-pct" id="studyTotalPct">0%</span>
+      </div>
     </div>
     <div class="progress-labels">
       <div class="progress-label-day">Heute <span id="studyDayLabel">0</span> · Gesamt <span id="studyTotalLabel">0</span></div>
-      <div class="progress-label-pct" id="studyPct">0%</div>
     </div>
   </div>
 
@@ -1091,6 +1178,15 @@
   </div>
   <button class="done-btn"           onclick="startStudy(currentMode)">Nochmal lernen</button>
   <button class="done-btn-secondary" onclick="goHome()">Zur Startseite</button>
+</div>
+
+<!-- ══════════════ HISTORY SCREEN ══════════════ -->
+<div id="history" class="screen">
+  <div class="study-header">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="study-title" id="historyTitle">Verlauf</div>
+  </div>
+  <div class="history-list" id="historyList"></div>
 </div>
 
 <!-- ══════════════ LESSONS SCREEN ══════════════ -->
@@ -1523,8 +1619,9 @@ function updateHomeStats() {
   document.getElementById('homeGoalNum').textContent    = dailyGoal;
   document.getElementById('homeTotalCount').textContent = totalCount;
   document.getElementById('homeDayPct').textContent     = dayPct + '%';
-  document.getElementById('homeProgressTotal').style.width = totalPct + '%';
+  document.getElementById('homeTotalPct').textContent   = totalPct + '%';
   document.getElementById('homeProgressDay').style.width   = dayPct + '%';
+  document.getElementById('homeProgressTotal').style.width = totalPct + '%';
 }
 
 function updateStudyProgress() {
@@ -1536,11 +1633,12 @@ function updateStudyProgress() {
   const dayPct   = Math.min(100, Math.round(dayCount / dailyGoal * 100));
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
 
+  document.getElementById('studyProgressDay').style.width   = dayPct   + '%';
   document.getElementById('studyProgressTotal').style.width = totalPct + '%';
-  document.getElementById('studyProgressDay').style.width   = dayPct  + '%';
+  document.getElementById('studyPct').textContent           = dayPct   + '%';
+  document.getElementById('studyTotalPct').textContent      = totalPct + '%';
   document.getElementById('studyDayLabel').textContent      = dayCount + '/' + dailyGoal;
   document.getElementById('studyTotalLabel').textContent    = totalCount;
-  document.getElementById('studyPct').textContent           = dayPct + '%';
 }
 
 // ── DONE ───────────────────────────────────────────────
@@ -1591,6 +1689,43 @@ document.getElementById('goalModal').addEventListener('click', e => {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if (id === 'history') buildHistory();
+}
+
+function buildHistory() {
+  const lang = activeLang();
+  const goal = dailyGoals[lang] || 10;
+  document.getElementById('historyTitle').textContent = capitalize(lang) + ' – Verlauf';
+
+  // Collect all days for this language from todayStats
+  const prefix = '|' + lang;
+  const days = Object.entries(todayStats)
+    .filter(([k]) => k.endsWith(prefix))
+    .map(([k, count]) => ({ date: k.replace(prefix, ''), count }))
+    .sort((a, b) => b.date.localeCompare(a.date)); // newest first
+
+  const list = document.getElementById('historyList');
+  list.innerHTML = '';
+
+  if (!days.length) {
+    list.innerHTML = '<p style="color:var(--text-muted);font-size:0.82rem;padding:20px 0">Noch kein Verlauf vorhanden.</p>';
+    return;
+  }
+
+  days.forEach(({ date, count }) => {
+    const pct = Math.min(100, Math.round(count / goal * 100));
+    const reached = count >= goal;
+    const [y, m, d] = date.split('-');
+    const label = new Date(+y, +m - 1, +d).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' });
+
+    const row = document.createElement('div');
+    row.className = 'history-day';
+    row.innerHTML = `
+      <span class="history-date">${label}</span>
+      <div class="history-bar-wrap"><div class="history-bar-fill" style="width:${pct}%"></div></div>
+      <span class="history-count${reached ? ' reached' : ''}">${count} / ${goal}</span>`;
+    list.appendChild(row);
+  });
 }
 
 function goHome() {

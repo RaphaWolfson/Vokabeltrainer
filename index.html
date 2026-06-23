@@ -518,7 +518,10 @@
     width: 100%;
     perspective: 1000px;
     margin-bottom: 20px;
+    position: relative;
   }
+
+  #study { touch-action: none; }
 
   .card-inner {
     position: relative;
@@ -1030,8 +1033,8 @@
 
   <div class="card-area" id="swipeZone">
     <div class="card-perspective">
+      <div class="swipe-overlay" id="swipeOverlay"></div>
       <div class="card-inner" id="cardInner">
-        <div class="swipe-overlay" id="swipeOverlay"></div>
         <!-- FRONT -->
         <div class="card-face front" id="cardFront">
           <div class="card-strength" id="cardStrength"></div>

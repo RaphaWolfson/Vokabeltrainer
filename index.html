@@ -981,7 +981,7 @@
     <div class="goal-card-top">
       <span class="goal-label">Tagesziel</span>
       <div style="display:flex;gap:6px;align-items:center">
-        <button class="goal-edit-btn" onclick="openGoalModal()" id="goalNumBtn" style="font-weight:700;color:var(--text-primary);font-size:0.82rem">10</button>
+        <button class="goal-edit-btn" onclick="openGoalModal()" id="goalNumBtn" style="font-weight:700;color:var(--text-primary);font-size:0.82rem">10 Stk.</button>
         <button class="goal-edit-btn" onclick="showScreen('history')" title="Verlauf">📅</button>
       </div>
     </div>
@@ -1630,7 +1630,7 @@ function updateHomeStats() {
 
   document.getElementById('homeDayCount').textContent   = rightCount;
   document.getElementById('homeGoalNum').textContent    = dailyGoal;
-  document.getElementById('goalNumBtn').textContent     = dailyGoal;
+  document.getElementById('goalNumBtn').textContent     = dailyGoal + ' Stk.';
   document.getElementById('homeTotalCount').textContent = totalCount;
   document.getElementById('homeDayPct').textContent     = rightPct + '%';
   document.getElementById('homeTotalPct').textContent   = totalCount + ' / ' + totalVocab;

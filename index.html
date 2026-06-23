@@ -130,28 +130,38 @@
   .goal-bars {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: 10px;
+    gap: 10px;
+    margin-bottom: 0;
   }
 
-  .goal-bar-row {
+  .goal-bar-section {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .goal-bar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
   }
 
   .goal-bar-label {
     font-size: 0.6rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
     color: var(--text-muted);
-    width: 38px;
-    flex-shrink: 0;
+  }
+
+  .goal-bar-meta {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
   }
 
   .goal-bar-track {
-    flex: 1;
+    width: 100%;
     height: 5px;
     background: var(--border);
     border-radius: 3px;
@@ -993,23 +1003,27 @@
       </div>
     </div>
     <div class="goal-bars">
-      <div class="goal-bar-row">
-        <span class="goal-bar-label">Heute</span>
+      <div class="goal-bar-section">
+        <div class="goal-bar-header">
+          <span class="goal-bar-label">Heute</span>
+          <span class="goal-bar-meta" id="homeDayMeta">0 gelernt · 0 gesehen · 10 Ziel</span>
+        </div>
         <div class="goal-bar-track">
           <div class="goal-bar-fill seen" id="homeProgressSeen" style="width:0%"></div>
           <div class="goal-bar-fill day"  id="homeProgressDay"  style="width:0%"></div>
         </div>
-        <span class="goal-bar-pct" id="homeDayPct">0 / 10</span>
       </div>
-      <div class="goal-bar-row">
-        <span class="goal-bar-label">Gelernt</span>
-        <div class="goal-bar-track"><div class="goal-bar-fill total" id="homeProgressTotal" style="width:0%"></div></div>
-        <span class="goal-bar-pct" id="homeTotalPct">0%</span>
+      <div class="goal-bar-section">
+        <div class="goal-bar-header">
+          <span class="goal-bar-label">Gesamt</span>
+          <span class="goal-bar-meta" id="homeTotalMeta">0 gelernt · 0 gesamt</span>
+        </div>
+        <div class="goal-bar-track">
+          <div class="goal-bar-fill total" id="homeProgressTotal" style="width:0%"></div>
+        </div>
       </div>
     </div>
-    <div class="goal-stats">
-      <div class="goal-count"><span id="homeSeenCount">0</span> / <span id="homeGoalNum">10</span> · <strong id="homeDayCount">0</strong> gelernt</div>
-    </div>
+    <span id="homeGoalNum" style="display:none">10</span>
   </div>
 
   <!-- Modes -->
@@ -1018,7 +1032,7 @@
     <button class="mode-btn" onclick="startStudy('de-to-foreign')">
       <div class="mode-icon">🇩🇪</div>
       <div class="mode-text">
-        <div class="mode-name">Deutsch → Fremdsprache</div>
+        <div class="mode-name">Deutsch → <span class="mode-lang-name">Fremdsprache</span></div>
         <div class="mode-desc">Du siehst das deutsche Wort</div>
       </div>
       <div class="mode-arrow">›</div>
@@ -1026,7 +1040,7 @@
     <button class="mode-btn" onclick="startStudy('foreign-to-de')">
       <div class="mode-icon">🌐</div>
       <div class="mode-text">
-        <div class="mode-name">Fremdsprache → Deutsch</div>
+        <div class="mode-name"><span class="mode-lang-name">Fremdsprache</span> → Deutsch</div>
         <div class="mode-desc">Du siehst das fremde Wort</div>
       </div>
       <div class="mode-arrow">›</div>
@@ -1063,23 +1077,26 @@
   </div>
 
   <div class="progress-wrap">
-    <div class="goal-bars" style="margin-bottom:6px">
-      <div class="goal-bar-row">
-        <span class="goal-bar-label">Heute</span>
+    <div class="goal-bars">
+      <div class="goal-bar-section">
+        <div class="goal-bar-header">
+          <span class="goal-bar-label">Heute</span>
+          <span class="goal-bar-meta" id="studyDayMeta">0 gelernt · 0 gesehen · 10 Ziel</span>
+        </div>
         <div class="goal-bar-track">
           <div class="goal-bar-fill seen" id="studyProgressSeen" style="width:0%"></div>
           <div class="goal-bar-fill day"  id="studyProgressDay"  style="width:0%"></div>
         </div>
-        <span class="goal-bar-pct" id="studyPct">0%</span>
       </div>
-      <div class="goal-bar-row">
-        <span class="goal-bar-label">Gelernt</span>
-        <div class="goal-bar-track"><div class="goal-bar-fill total" id="studyProgressTotal" style="width:0%"></div></div>
-        <span class="goal-bar-pct" id="studyTotalPct">0%</span>
+      <div class="goal-bar-section">
+        <div class="goal-bar-header">
+          <span class="goal-bar-label">Gesamt</span>
+          <span class="goal-bar-meta" id="studyTotalMeta">0 gelernt · 0 gesamt</span>
+        </div>
+        <div class="goal-bar-track">
+          <div class="goal-bar-fill total" id="studyProgressTotal" style="width:0%"></div>
+        </div>
       </div>
-    </div>
-    <div class="progress-labels">
-      <div class="progress-label-day">Heute <span id="studyDayLabel">0</span> · Gelernt <span id="studyTotalLabel">0</span></div>
     </div>
   </div>
 
@@ -1388,6 +1405,7 @@ function buildFilters() {
       selectedCats = [...cats];
       saveCats();
       catRow.querySelectorAll('.filter-chip').forEach(c => c.classList.add('active'));
+      document.getElementById('settingsModal').classList.remove('open');
     };
     catRow.appendChild(allChip);
     cats.forEach(c => {
@@ -1405,9 +1423,10 @@ function buildFilters() {
   // sync dailyGoal for the initially selected language
   dailyGoal = dailyGoals[defaultLang] || 10;
 
-  // Title
+  // Title + mode button labels
   const title = selectedLangs.length ? capitalize(selectedLangs[0]) : 'Vokabeln';
   document.getElementById('homeTitle').textContent = title + ' lernen';
+  updateModeBtnLabels(defaultLang);
 }
 
 function selectLang(lang) {
@@ -1419,7 +1438,13 @@ function selectLang(lang) {
     chip.classList.toggle('active', chip.dataset.lang === lang);
   });
   document.getElementById('homeTitle').textContent = capitalize(lang) + ' lernen';
+  updateModeBtnLabels(lang);
   updateHomeStats();
+}
+
+function updateModeBtnLabels(lang) {
+  const label = capitalize(lang) || 'Fremdsprache';
+  document.querySelectorAll('.mode-lang-name').forEach(el => el.textContent = label);
 }
 
 function toggleFilter(chip, arr, val) {
@@ -1565,8 +1590,9 @@ function showCard() {
   document.getElementById('tapHint').style.opacity = '1';
 
   // Mode label
-  const modeLabel = currentMode === 'de-to-foreign' ? 'Deutsch → Fremdsprache'
-                  : currentMode === 'foreign-to-de'  ? 'Fremdsprache → Deutsch'
+  const lang = capitalize(activeLang()) || 'Fremdsprache';
+  const modeLabel = currentMode === 'de-to-foreign' ? 'Deutsch → ' + lang
+                  : currentMode === 'foreign-to-de'  ? lang + ' → Deutsch'
                   : 'Gemischt';
   document.getElementById('studyTitle').textContent = modeLabel;
 
@@ -1637,10 +1663,8 @@ function updateHomeStats() {
 
   document.getElementById('homeGoalNum').textContent    = dailyGoal;
   document.getElementById('goalNumBtn').textContent     = dailyGoal + ' Stk.';
-  document.getElementById('homeDayPct').textContent     = seenCount + ' / ' + dailyGoal;
-  document.getElementById('homeSeenCount').textContent  = seenCount;
-  document.getElementById('homeDayCount').textContent   = rightCount;
-  document.getElementById('homeTotalPct').textContent   = totalCount + ' / ' + totalVocab;
+  document.getElementById('homeDayMeta').textContent    = rightCount + ' gelernt · ' + seenCount + ' gesehen · ' + dailyGoal + ' Ziel';
+  document.getElementById('homeTotalMeta').textContent  = totalCount + ' gelernt · ' + totalVocab + ' gesamt';
   document.getElementById('homeProgressSeen').style.width  = Math.min(seenPct,  100) + '%';
   document.getElementById('homeProgressDay').style.width   = Math.min(rightPct, 100) + '%';
   document.getElementById('homeProgressTotal').style.width = totalPct + '%';
@@ -1660,10 +1684,8 @@ function updateStudyProgress() {
   document.getElementById('studyProgressSeen').style.width  = Math.min(seenPct,  100) + '%';
   document.getElementById('studyProgressDay').style.width   = Math.min(rightPct, 100) + '%';
   document.getElementById('studyProgressTotal').style.width = totalPct + '%';
-  document.getElementById('studyPct').textContent           = rightPct + '%';
-  document.getElementById('studyTotalPct').textContent      = totalCount + ' / ' + totalVocab;
-  document.getElementById('studyDayLabel').textContent      = rightCount + '/' + dailyGoal;
-  document.getElementById('studyTotalLabel').textContent    = totalCount + ' / ' + totalVocab;
+  document.getElementById('studyDayMeta').textContent   = rightCount + ' gelernt · ' + seenCount + ' gesehen · ' + dailyGoal + ' Ziel';
+  document.getElementById('studyTotalMeta').textContent = totalCount + ' gelernt · ' + totalVocab + ' gesamt';
 }
 
 // ── DONE ───────────────────────────────────────────────

@@ -1026,9 +1026,9 @@
     </div>
   </div>
 
-  <div class="card-area">
+  <div class="card-area" id="swipeZone" onclick="flipCard()">
     <div class="card-perspective">
-      <div class="card-inner" id="cardInner" onclick="flipCard()">
+      <div class="card-inner" id="cardInner">
         <div class="swipe-overlay" id="swipeOverlay"></div>
         <!-- FRONT -->
         <div class="card-face front" id="cardFront">
@@ -1710,22 +1710,23 @@ async function autoLoadCSV() {
 // ── SWIPE GESTURES ─────────────────────────────────────
 function initSwipe() {
   const wrap    = document.querySelector('.card-perspective');
-  const inner   = document.getElementById('cardInner');
+  const zone    = document.getElementById('swipeZone');
   const overlay = document.getElementById('swipeOverlay');
   const THRESHOLD = 72;
   let startX = 0, startY = 0, dx = 0, swiping = false;
 
-  inner.addEventListener('touchstart', e => {
+  zone.addEventListener('touchstart', e => {
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     dx = 0; swiping = false;
   }, { passive: true });
 
-  inner.addEventListener('touchmove', e => {
+  zone.addEventListener('touchmove', e => {
     const curDx = e.touches[0].clientX - startX;
     const curDy = e.touches[0].clientY - startY;
+    if (!isFlipped) return; // vor dem Umdrehen: kein Swipe, Click darf feuern
     if (!swiping && Math.abs(curDx) < 8) return;
-    if (Math.abs(curDy) > Math.abs(curDx)) return; // vertical scroll wins
+    if (Math.abs(curDy) > Math.abs(curDx)) return;
     swiping = true;
     e.preventDefault();
     dx = curDx;
@@ -1745,7 +1746,7 @@ function initSwipe() {
     overlay.style.opacity = pct;
   }, { passive: false });
 
-  inner.addEventListener('touchend', () => {
+  zone.addEventListener('touchend', () => {
     overlay.style.opacity = 0;
     overlay.textContent = '';
 

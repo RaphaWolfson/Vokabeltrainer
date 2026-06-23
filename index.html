@@ -53,7 +53,7 @@
   }
 
   .home-header {
-    margin-bottom: 36px;
+    margin-bottom: 20px;
   }
 
   .home-greeting {
@@ -512,13 +512,13 @@
     justify-content: center;
     touch-action: none;
     cursor: pointer;
+    position: relative;
   }
 
   .card-perspective {
     width: 100%;
     perspective: 1000px;
     margin-bottom: 20px;
-    position: relative;
   }
 
   #study { touch-action: none; }
@@ -744,7 +744,6 @@
   .swipe-overlay {
     position: absolute;
     inset: 0;
-    border-radius: 24px;
     pointer-events: none;
     z-index: 10;
     display: flex;
@@ -906,8 +905,7 @@
   </div>
 
   <!-- Language filter -->
-  <div id="langFilterSection" style="display:none">
-    <div class="section-label">Sprache</div>
+  <div id="langFilterSection" style="display:none; margin-bottom: 16px;">
     <div class="filter-row" id="langFilterRow" style="flex-wrap:nowrap"></div>
   </div>
 
@@ -1032,8 +1030,8 @@
   </div>
 
   <div class="card-area" id="swipeZone">
+    <div class="swipe-overlay" id="swipeOverlay"></div>
     <div class="card-perspective">
-      <div class="swipe-overlay" id="swipeOverlay"></div>
       <div class="card-inner" id="cardInner">
         <!-- FRONT -->
         <div class="card-face front" id="cardFront">
@@ -1173,7 +1171,8 @@ function activeLang() {
 }
 
 function todayKey() {
-  return new Date().toISOString().slice(0,10);
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 function getTodayCount() {

@@ -987,13 +987,13 @@
         <span class="goal-bar-pct" id="homeDayPct">0%</span>
       </div>
       <div class="goal-bar-row">
-        <span class="goal-bar-label">Gesamt</span>
+        <span class="goal-bar-label">Gelernt</span>
         <div class="goal-bar-track"><div class="goal-bar-fill total" id="homeProgressTotal" style="width:0%"></div></div>
         <span class="goal-bar-pct" id="homeTotalPct">0%</span>
       </div>
     </div>
     <div class="goal-stats">
-      <div class="goal-count"><strong id="homeDayCount">0</strong> / <span id="homeGoalNum">10</span> heute · <span id="homeTotalCount">0</span> gesamt</div>
+      <div class="goal-count"><strong id="homeDayCount">0</strong> / <span id="homeGoalNum">10</span> heute · <span id="homeTotalCount">0</span> gelernt</div>
     </div>
   </div>
 
@@ -1055,7 +1055,7 @@
         <span class="goal-bar-pct" id="studyPct">0%</span>
       </div>
       <div class="goal-bar-row">
-        <span class="goal-bar-label">Gesamt</span>
+        <span class="goal-bar-label">Gelernt</span>
         <div class="goal-bar-track"><div class="goal-bar-fill total" id="studyProgressTotal" style="width:0%"></div></div>
         <span class="goal-bar-pct" id="studyTotalPct">0%</span>
       </div>
@@ -1589,7 +1589,7 @@ function updateHomeStats() {
   const totalCount = getTotalLearned();
   const totalVocab = vocab.flatMap(v => v.langs.filter(l => l.name === lang)).length || 1;
 
-  const dayPct   = Math.min(100, Math.round(dayCount / dailyGoal * 100));
+  const dayPct   = Math.round(dayCount / dailyGoal * 100);
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
 
   document.getElementById('homeDayCount').textContent   = dayCount;
@@ -1597,7 +1597,7 @@ function updateHomeStats() {
   document.getElementById('homeTotalCount').textContent = totalCount;
   document.getElementById('homeDayPct').textContent     = dayPct + '%';
   document.getElementById('homeTotalPct').textContent   = totalPct + '%';
-  document.getElementById('homeProgressDay').style.width   = dayPct + '%';
+  document.getElementById('homeProgressDay').style.width   = Math.min(dayPct, 100) + '%';
   document.getElementById('homeProgressTotal').style.width = totalPct + '%';
 }
 
@@ -1607,10 +1607,10 @@ function updateStudyProgress() {
   const totalCount = getTotalLearned();
   const totalVocab = vocab.flatMap(v => v.langs.filter(l => l.name === lang)).length || 1;
 
-  const dayPct   = Math.min(100, Math.round(dayCount / dailyGoal * 100));
+  const dayPct   = Math.round(dayCount / dailyGoal * 100);
   const totalPct = Math.min(100, Math.round(totalCount / totalVocab * 100));
 
-  document.getElementById('studyProgressDay').style.width   = dayPct   + '%';
+  document.getElementById('studyProgressDay').style.width   = Math.min(dayPct, 100) + '%';
   document.getElementById('studyProgressTotal').style.width = totalPct + '%';
   document.getElementById('studyPct').textContent           = dayPct   + '%';
   document.getElementById('studyTotalPct').textContent      = totalPct + '%';
